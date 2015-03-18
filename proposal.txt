@@ -1,0 +1,62 @@
+
+
+
+
+
+
+
+FFiinnaall PPrroojjeecctt
+
+PPuurrppoossee::
+     To  tie  together three totally unrelated graphics rendering
+     issues.
+
+
+SSttaatteemmeenntt::
+     Paragraph: What it's about.
+
+     Paragraph: What to do.
+
+     Paragraph: Why it is interesting and challenging.
+
+     Paragraph: What I will learn.
+
+TTeecchhnniiccaall OOuuttlliinnee::
+    Basically, your objectives in your objective list should be fairly
+    short statements of the objective; you should provide additional
+    details about your objectives in this section to clarify what you
+    plan to do.
+
+     Further, survey the important data structures and algorithms that
+     will be necessary to achieve the goals, and (for ray tracing
+     projects) lists the new commands
+     that will need to be added to the input language.
+
+     To  get  bold face: bboolldd ffaaccee wwoorrddss.  To get italics: _i_t_a_l_i_c
+     _f_a_c_e  _w_o_r_d_s.   To  get typewriter font: typed words.  To get
+     larger  words:  large  words.   To  get smaller words: small
+     words.  The major commands are .IP (indented paragraph), .sp
+     (line  space),  .br  (line break), .RS (start right indent),
+     .RE (end right indent), \f (change font), \s (change size)
+
+BBiibblliiooggrraapphhyy
+     Articles  and/or  books  with  important  information on the
+     topics of the project.
+
+
+
+
+
+
+                              - 3 -
+
+
+OObbjjeeccttiivveess::
+
+     FFuullll UUsseerrIIDD:: ____________________________                  SSttuuddeenntt IIDD:: ____________________________
+
+     ___  Objective one.
+
+     ___  Objective two.
+
+     ___  And so on.
