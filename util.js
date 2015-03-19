@@ -298,3 +298,33 @@ degToRad = function(angle) {
 radToDeg = function(angle) {
     return angle * 180 / Math.PI;
 }
+
+mTransInv = function(primitive) {
+    if (!primitive.mTransInv) {
+        if (!primitive.mTrans) {
+            primitive.mTrans = m4();
+        }
+        primitive.mTransInv = m4Inverse(primitive.mTrans);
+    }
+    return primitive.mTransInv;
+};
+
+mTransNoTranslateInv = function(primitive) {
+    if (!primitive.mTransNoTranslateInv) {
+        if (!primitive.mTransNoTranslate) {
+            primitive.mTransNoTranslate = m4();
+        }
+        primitive.mTransNoTranslateInv = m4Inverse(primitive.mTransNoTranslate);
+    }
+    return primitive.mTransNoTranslateInv;
+};
+
+mTransNoScaleInv = function(primitive) {
+    if (!primitive.mTransNoScaleInv) {
+        if (!primitive.mTransNoScale) {
+            primitive.mTransNoScale = m4();
+        }
+        primitive.mTransNoScaleInv = m4Inverse(primitive.mTransNoScale);
+    }
+    return primitive.mTransNoScaleInv;
+};
