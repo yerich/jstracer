@@ -43,6 +43,14 @@ vNeg = function(v1) {
     return result;
 }
 
+vInv = function(v1) {
+    var result = [];
+    for (var i = 0; i < v1.length; i++) {
+        result[i] = 1/v1[i];
+    }
+    return result;
+}
+
 vMult = function(v1, c) {
     var result = [];
     for (var i = 0; i < v1.length; i++) {

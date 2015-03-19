@@ -1,4 +1,4 @@
-e = 0.00000000001
+e = 0.00001
 
 function drawImage() {
     var c = document.getElementById("render");
@@ -37,12 +37,19 @@ function drawImage() {
             diffuseColor: [0, 0, 255],
             specularColor: [0, 0, 0],
             ambientColor: [0, 0, 0]
+        },
+        {
+            type: "box",
+            id: "box1",
+            diffuseColor: [0, 255, 0],
+            specularColor: [0, 255, 0],
+            ambientColor: [0, 255, 0]
         }
     ];
 
     d.lights = [
         {
-            center: [0, 10, 0],
+            center: [0, 2.5, 0],
             diffuseIntensity: [0.5, 0.5, 0.5],
             specularIntensity: [0.5, 0.5, 0.5],
             falloff: [1, 0, 0]
@@ -53,8 +60,14 @@ function drawImage() {
         { target: "plane1", type: "translate", amount: [0, -2, 0]},
         { target: "planeback", type: "rotate", amount: 90, axis: "x"},
         { target: "planeback", type: "translate", amount: [0, 0, -3]},
+        { target: "sphere1", type: "rotate", axis: "x", amount: 30},
         { target: "sphere1", type: "translate", amount: [2.5, 2.5, 0]},
         { target: "origin", type: "scale", amount: [0.4, 0.4, 0.4]},
+        { target: "origin", type: "rotate", axis: "x", amount: 60},
+        { target: "box1", type: "rotate", axis: "y", amount: 75},
+        { target: "box1", type: "rotate", axis: "x", amount: 60},
+        { target: "box1", type: "rotate", axis: "z", amount: 45},
+        { target: "box1", type: "translate", amount: [-2, 2, -1]},
     ];
 
     d.camera = {
@@ -78,6 +91,7 @@ function drawImage() {
                 primitive.mTrans = m4();
                 primitive.mTransNoScale = m4();
                 primitive.mTransNoTranslate = m4();
+                primitive.mTransRotateAndInvScale = m4();
             }
 
             if (primitive.type === "sphere") {
@@ -87,7 +101,10 @@ function drawImage() {
             else if (primitive.type === "plane") {
                 primitive.normal = [0, 1, 0];
                 primitive.point = [0, 0, 0];
-            } 
+            }
+            else if (primitive.type === "box") {
+                primitive.bounds = [[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]];
+            }
         }
 
         for (var i in d.transformations) {
@@ -102,11 +119,13 @@ function drawImage() {
             else if (t.type === "scale") {
                 primitive.mTrans = mScale(t.amount[0], t.amount[1], t.amount[2], primitive.mTrans);
                 primitive.mTransNoTranslate = mScale(t.amount[0], t.amount[1], t.amount[2], primitive.mTransNoTranslate);
+                primitive.mTransRotateAndInvScale = mScale(1/t.amount[0], 1/t.amount[1], 1/t.amount[2], primitive.mTransRotateAndInvScale);
             }
             else if (t.type === "rotate") {
                 primitive.mTrans = mRotate(t.axis, t.amount, primitive.mTrans);
                 primitive.mTransNoTranslate = mRotate(t.axis, t.amount, primitive.mTransNoTranslate);
                 primitive.mTransNoScale = mRotate(t.axis, t.amount, primitive.mTransNoScale);
+                primitive.mTransRotateAndInvScale = mRotate(t.axis, t.amount, primitive.mTransRotateAndInvScale);
             }
         }
 
@@ -118,6 +137,7 @@ function drawImage() {
                 primitive.mTrans = m4();
                 primitive.mTransNoTranslate = m4();
                 primitive.mTransNoScale = m4();
+                primitive.mTransRotateAndInvScale = m4();
             } 
         }
     };
