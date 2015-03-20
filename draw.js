@@ -1,6 +1,6 @@
 e = 0.00001;
-useWorkers = false;
-lineSkip = 10;
+useWorkers = true;
+lineSkip = 2;
 numWorkers = 8;
 postMessageCalls = 0;
 
@@ -20,6 +20,7 @@ function drawImage(data) {
     };
 
     var preprocessPrimitives = function(primitives, transformations) {
+        // Initialize Transformation Matrices
         for (var i in primitives) {
             var primitive = primitives[i];
             if (!primitive.mTrans) {
@@ -43,12 +44,18 @@ function drawImage(data) {
             else if (primitive.type === "model") {
                 if (!primitive.triangles)
                     primitive.triangles = [];
+                
+                // Generate triangles from blender-style raw triangle strings
+                if (primitive.modelFile) {
+                   primitive.triangleRawString = d.modelData[primitive.modelFile];
+                }
 
                 if (primitive.triangleRawString) {
                     var triangles = primitive.triangleRawString.split(" ");
                     primitive.triangles = [];
                     for (var j = 0; j < triangles.length; j++) triangles[j] = parseFloat(triangles[j]);
                     for (var j = 0; j < triangles.length; j += 9) {
+                        if (typeof triangles[j] === "undefined") continue;
                         primitive.triangles.push([[triangles[j], triangles[j+1], triangles[j+2]], 
                                                    [triangles[j+3], triangles[j+4], triangles[j+5]],
                                                    [triangles[j+6], triangles[j+7], triangles[j+8]]]);
@@ -56,7 +63,8 @@ function drawImage(data) {
                 }
             }
         }
-
+    
+        // Apply transformations to the matrices
         for (var i in transformations) {
             var t = transformations[i];
             var primitive = findPrimitive(primitives, t.target);
@@ -78,7 +86,9 @@ function drawImage(data) {
                 primitive.mTransRotateAndInvScale = mRotate(t.axis, t.amount, primitive.mTransRotateAndInvScale);
             }
         }
-
+        
+        // Planes, triangles and boxes can have the transformations applied to their points
+        // immediately to save computation time later.
         for (var i in primitives) {
             var primitive = primitives[i];
             if (primitive.type === "plane") {
@@ -164,7 +174,7 @@ function drawImage(data) {
                             writePixel(pixel.x, pixel.y, pixel.color[0], pixel.color[1], pixel.color[2], 255);
                         }
 
-                        if (e.data.pixels[0].y % 20 == 0 || e.data.pixels[0].y > height - 1 - (numWorkers * lineSkip))
+                        if (e.data.pixels[0].y % lineSkip == 0 || e.data.pixels[0].y > height - 1 - (numWorkers * lineSkip))
                             updateCanvas();
                     }
                 };
@@ -191,8 +201,27 @@ function drawImage(data) {
 
         updateCanvas();
     }
-    preprocessPrimitives(d.primitives, d.transformations);
-    writePixels();
+
+    if (d.models) {
+        d.modelData = {};
+        for (var i = 0; i < d.models.length; i++) {
+            (function(i) {
+                $.get("models/"+d.models[i], function(response) {
+                    d.modelData[d.models[i]] = response.trim().replace(/\s+/g, " ");
+                    console.log("Model loaded: "+d.models[i]);
+                });
+            })(i);
+        }
+
+        $(document).ajaxStop(function () {
+            preprocessPrimitives(d.primitives, d.transformations);
+            writePixels();
+        });
+    }
+    else {
+        preprocessPrimitives(d.primitives, d.transformations);
+        writePixels();
+    }
 
     return d;
 }

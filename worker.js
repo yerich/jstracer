@@ -13,6 +13,7 @@ var findPrimitive = function(id) {
 };
 
 function intersect(primitive, position, ray, resultOnly) {
+    //console.log("called on ", primitive);
     var invTrans = mTransInv(primitive);
     var invTransNoTranslate = mTransNoTranslateInv(primitive);
     var invTransNoScale = mTransNoScaleInv(primitive);
@@ -203,12 +204,23 @@ function intersect(primitive, position, ray, resultOnly) {
     // MODEL ------------------------------------------------------------------------
     else if (primitive.type === "model") {
         // test bounding box
-        var tmpPrimitive = $.extend({}, primitive);
-        tmpPrimitive.type = "boundingBox";
+        var tmpPrimitive = {
+            type: "boundingBox",
+            bounds: primitive.bounds,
+            id: primitive.id+"_boundingBox"
+        };
 
-        return intersect(tmpPrimitive, position, ray, resultOnly);
+        var boundingBoxResult = intersect(tmpPrimitive, position, ray, resultOnly);
+        if (boundingBoxResult === false) return false;
 
-        return false;
+        var bestResult = false;
+        for (var i = 0; i < primitive.triangles.length; i++) {
+            var triangleResult = intersect(primitive.triangles[i], position, ray, resultOnly);
+            if (bestResult === false || triangleResult.t < bestResult.t)
+                bestResult = triangleResult;
+        }
+
+        return bestResult;
     }
 
     return false;
@@ -274,7 +286,7 @@ function getColorForRay(rayN) {
                 diffuseColor = vCompMultv(diffuseColor, light.diffuseIntensity);
                 //diffuseColor = [0, 0, 0];
 
-                if (primitive.type === "triangle")
+                if (primitive.type === "triangle" || primitive.type === "model")
                     var specularFactor = Math.abs(Math.pow(vDot(hitPointToLightR, hitPointToCameraN), 25));
                 else
                     var specularFactor = Math.max(0.0, Math.pow(vDot(hitPointToLightR, hitPointToCameraN), 25));
