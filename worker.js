@@ -16,12 +16,20 @@ function intersect(primitive, position, ray, resultOnly) {
     var invTrans = mTransInv(primitive);
     var invTransNoTranslate = mTransNoTranslateInv(primitive);
     var invTransNoScale = mTransNoScaleInv(primitive);
+    
+    if (primitive.type === "triangle" || primitive.type === "boundingBox") {
+        var cameraStart = position;
+        var cameraDir = ray;
+        var cameraRayRatio = 1;
+    }
+    else {
+        var cameraStart = m4Multv3(invTrans, position);
+        var cameraDir = m4Multv3(invTransNoTranslate, ray);
+        var cameraRayRatio = vLen(cameraDir);
+        cameraDir = vNormalize(cameraDir);
+    }
 
-    var cameraStart = m4Multv3(invTrans, position);
-    var cameraDir = m4Multv3(invTransNoTranslate, ray);
-    var cameraRayRatio = vLen(cameraDir);
-    cameraDir = vNormalize(cameraDir);
-
+    // SPHERE ------------------------------------------------------------------------
     if (primitive.type === "sphere") {
         // http://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
         var centerDiff = v3Sub(cameraStart, primitive.center);
@@ -56,6 +64,7 @@ function intersect(primitive, position, ray, resultOnly) {
             }
         }
     }
+    // PLANE ------------------------------------------------------------------------
     else if (primitive.type === "plane") {
         // http://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection
         var denom = vDot(cameraDir, primitive.normal);
@@ -75,7 +84,44 @@ function intersect(primitive, position, ray, resultOnly) {
             hitPoint: vAdd(m4Multv3(primitive.mTransNoTranslate, hitPoint), position)
         }
     }
-    else if (primitive.type === "box") {
+    // TRIANGLE ------------------------------------------------------------------------
+    else if (primitive.type === "triangle") {
+        // http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+        var v1 = primitive.v1;
+        var v2 = primitive.v2;
+        var v3 = primitive.v3;
+        
+        var e1 = primitive.e1;
+        var e2 = primitive.e2;
+
+        var p = vCross3(cameraDir, e2);
+        var det = vDot(e1, p);
+        if (det > -e && det < e) return false;
+        var detInv = 1 / det;
+
+        var t = v3Sub(cameraStart, v1);
+        var u = vDot(t, p) * detInv;
+        if (u < 0 || u > 1) return false;
+
+        var q = vCross3(t, e1);
+        var v = vDot(cameraDir, q) * detInv;
+        if (v < 0 || u + v > 1) return false;
+
+        var result = vDot(e2, q) * detInv;
+        if (result > e) {
+            if (resultOnly) return result / cameraRayRatio;
+            var hitPoint = vMult(cameraDir, result);
+
+            return {
+                t: result / cameraRayRatio,
+                normal: primitive.normal,
+                hitPoint: vAdd(m4Multv3(primitive.mTransNoTranslate, hitPoint), position)
+            };
+        }
+        return false;
+    }
+    // BOX ------------------------------------------------------------------------
+    else if (primitive.type === "box" || primitive.type === "boundingBox") {
         // http://www.scratchapixel.com/old/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-box-intersection/
         var invDir = vInv(cameraDir);
         var tmin, tmax, tymin, tymax, tzmin, tzmax;
@@ -98,7 +144,7 @@ function intersect(primitive, position, ray, resultOnly) {
             tymax = (bounds[1][1] - cameraStart[1]) * invDir[1];
         }
 
-        if ((tmin > tymax) || (tymin > tmax)) return false;
+        if ((tmin > tymax - e) || (tymin > tmax - e)) return false;
         if (tymin > tmin) tmin = tymin;
         if (tymax < tmax) tmax = tymax;
 
@@ -111,7 +157,7 @@ function intersect(primitive, position, ray, resultOnly) {
             tzmax = (bounds[1][2] - cameraStart[2]) * invDir[2];
         }
 
-        if ((tmin > tzmax) || (tzmin > tmax))
+        if ((tmin > tzmax - e) || (tzmin > tmax - e))
             return false;
         if (tzmin > tmin)
             tmin = tzmin;
@@ -125,33 +171,44 @@ function intersect(primitive, position, ray, resultOnly) {
         if (resultOnly) return result;
 
         var hitPoint = vAdd(cameraStart, vMult(cameraDir, result));
-        //console.log(hitPoint);
 
         var normal = [0.5, 0.5, 0.5];
-        if (hitPoint[0] > 0.5 - e)
+        if (hitPoint[0] > bounds[1][0] - e)
             normal = [1, 0, 0];
-        else if (hitPoint[0] < -0.5 + e)
+        else if (hitPoint[0] < bounds[0][0] + e)
             normal = [-1, 0, 0];
-        else if (hitPoint[1] > 0.5 - e)
+        else if (hitPoint[1] > bounds[1][1] - e)
             normal = [0, 1, 0];
-        else if (hitPoint[1] < -0.5 + e)
+        else if (hitPoint[1] < bounds[0][1] + e)
             normal = [0, -1, 0];
-        else if (hitPoint[2] > 0.5 - e)
+        else if (hitPoint[2] > bounds[1][2] - e)
             normal = [0, 0, 1];
-        else if (hitPoint[2] < -0.5 + e)
+        else if (hitPoint[2] < bounds[0][2] + e)
             normal = [0, 0, -1];
-        else
+        else {
             console.log("This should never happen. e set too low.");
-
-        hitPoint = m4Multv3(primitive.mTrans, hitPoint);
-        //console.log(normal);
-
-        normal = vNormalize(m4Multv3(primitive.mTransRotateAndInvScale, normal));
+            return false;
+        }
+        
+        if (primitive.type === "box") {
+            hitPoint = m4Multv3(primitive.mTrans, hitPoint);
+            normal = vNormalize(m4Multv3(primitive.mTransRotateAndInvScale, normal));
+        }
         return {
-            t: result,
+            t: result / cameraRayRatio,
             normal: normal,
             hitPoint: hitPoint
         }
+    }
+    // MODEL ------------------------------------------------------------------------
+    else if (primitive.type === "model") {
+        // test bounding box
+        var tmpPrimitive = $.extend({}, primitive);
+        tmpPrimitive.type = "boundingBox";
+
+        return intersect(tmpPrimitive, position, ray, resultOnly);
+
+        return false;
     }
 
     return false;
@@ -210,19 +267,25 @@ function getColorForRay(rayN) {
                 var hitPointToLightR = v3Sub(lightToHitPointN, vMult(result.normal, 2 * (vDot(lightToHitPointN, result.normal))));    // R
 
                 var lightFalloff = 1 / (light.falloff[0] + light.falloff[1] * hitPointToLightDist + light.falloff[2] * hitPointToLightDist * hitPointToLightDist);
-                var diffuseColor = vMult(primitive.diffuseColor, Math.max(0, vDot(result.normal, hitPointToLightN) * lightFalloff));
+                if (primitive.type === "triangle")
+                    var diffuseColor = vMult(primitive.diffuseColor, Math.abs(vDot(result.normal, hitPointToLightN) * lightFalloff));
+                else
+                    var diffuseColor = vMult(primitive.diffuseColor, Math.max(0, vDot(result.normal, hitPointToLightN) * lightFalloff));
                 diffuseColor = vCompMultv(diffuseColor, light.diffuseIntensity);
                 //diffuseColor = [0, 0, 0];
 
-                var specularFactor = Math.max(0.0, Math.pow(vDot(hitPointToLightR, hitPointToCameraN), 25));
+                if (primitive.type === "triangle")
+                    var specularFactor = Math.abs(Math.pow(vDot(hitPointToLightR, hitPointToCameraN), 25));
+                else
+                    var specularFactor = Math.max(0.0, Math.pow(vDot(hitPointToLightR, hitPointToCameraN), 25));
                 var specularColor = vCompMultv(vMult(primitive.specularColor, specularFactor), light.specularIntensity);
                 //specularColor = [0, 0, 0];
 
                 color = vAdd(color, vAdd3(diffuseColor, specularColor, ambientColor));
                 //color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
                 //if (Math.random() < 0.1 && primitive.id == "origin") console.log(lightToHitPointN);
-                //if (primitive.id == "box1") 
-                //    color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
+                if (primitive.id == "model1") 
+                    color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
             }
         }
     }
@@ -239,6 +302,34 @@ onmessage = function(e) {
             y: e.data.y
         });
     }
-    else if (e.data.action === "setD")
+    if (e.data.action === "getPixels") {
+        var data = [];
+        var rays = [];
+        for (var y = e.data.y1; y < e.data.y2; y++) {
+            for (var x = 0; x < width; x++) {
+                rays.push({x: x, y: y});
+            }
+        }
+
+        for (var i in rays) {
+            var rayData = rays[i];
+            var ray = vNormalize(vAdd(d.camera.direction, [rayData.x / width * max_x - (max_x/2), -(rayData.y / height * max_y) + (max_y/2), 0]));
+            data.push({
+                color: getColorForRay(ray),
+                x: rayData.x,
+                y: rayData.y
+            });
+        }
+        postMessage({
+            action: "getPixels",
+            pixels: data
+        });
+    }
+    else if (e.data.action === "setD") {
         d = e.data.d;
+        max_x = e.data.max_x;
+        max_y = e.data.max_y;
+        width = e.data.width;
+        height = e.data.height;
+    }
 }

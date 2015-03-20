@@ -1,0 +1,58 @@
+{
+    "primitives": [
+        {
+            "type": "plane",
+            "id": "plane1",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [255, 255, 255]
+        }, {
+            "type": "plane",
+            "id": "planeback",
+            "diffuseColor": [0, 0, 255],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [0, 0, 0]
+        }, {
+            "type": "model",
+            "id": "model1",
+            "triangleRawString": "0 0 0 0 1 0 1 0 0 0 0 1 0 1 1 1 0 1",
+            "diffuseColor": [0, 255, 0],
+            "specularColor": [0, 255, 0],
+            "ambientColor": [0, 255, 0]
+        }
+    ],
+    "lights": [
+        {
+            "center": [0, 0, 10],
+            "diffuseIntensity": [0.5, 0.5, 0.5],
+            "specularIntensity": [0.5, 0.5, 0.5],
+            "falloff": [1, 0, 0]
+        }
+    ],
+    "transformations": [
+        {
+            "target": "plane1",
+            "type": "translate",
+            "amount": [0, -2, 0]
+        }, {
+            "target": "planeback",
+            "type": "rotate",
+            "amount": 90,
+            "axis": "x"
+        }, {
+            "target": "planeback",
+            "type": "translate",
+            "amount": [0, 0, -3]
+        }, {
+            "target": "model1",
+            "type": "translate",
+            "amount": [1, 1, 1]
+        }
+    ],
+    "camera": {
+        "position": [0, 0, 10],
+        "direction": [0, 0, -1],
+        "up": [0, 1, 0]
+    },
+    "ambientIntensity": [0.1, 0.1, 0.1]
+}

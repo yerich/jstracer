@@ -1,92 +1,27 @@
-e = 0.00001
+e = 0.00001;
+useWorkers = false;
+lineSkip = 10;
+numWorkers = 8;
+postMessageCalls = 0;
 
-function drawImage() {
+function drawImage(data) {
     var c = document.getElementById("render");
     var ctx = c.getContext("2d");
 
     var width = c.width;
     var height = c.height;
     var canvasData = ctx.getImageData(0, 0, width, height);
-    var d = {};
+    var d = data;
 
-    d.primitives = [
-        {
-            type: "sphere",
-            id: "sphere1",
-            diffuseColor: [255, 233, 211],
-            specularColor: [255, 255, 255],
-            ambientColor: [255, 255, 255],
-        },
-        {
-            type: "sphere",
-            id: "origin",
-            diffuseColor: [255, 0, 0],
-            specularColor: [255, 0, 0],
-            ambientColor: [255, 0, 0],
-        },
-        {
-            type: "plane",
-            id: "plane1",
-            diffuseColor: [255, 255, 255],
-            specularColor: [0, 0, 0],
-            ambientColor: [255, 255, 255]
-        },
-        {
-            type: "plane",
-            id: "planeback",
-            diffuseColor: [0, 0, 255],
-            specularColor: [0, 0, 0],
-            ambientColor: [0, 0, 0]
-        },
-        {
-            type: "box",
-            id: "box1",
-            diffuseColor: [0, 255, 0],
-            specularColor: [0, 255, 0],
-            ambientColor: [0, 255, 0]
-        }
-    ];
-
-    d.lights = [
-        {
-            center: [0, 2.5, 0],
-            diffuseIntensity: [0.5, 0.5, 0.5],
-            specularIntensity: [0.5, 0.5, 0.5],
-            falloff: [1, 0, 0]
-        }
-    ];
-
-    d.transformations = [
-        { target: "plane1", type: "translate", amount: [0, -2, 0]},
-        { target: "planeback", type: "rotate", amount: 90, axis: "x"},
-        { target: "planeback", type: "translate", amount: [0, 0, -3]},
-        { target: "sphere1", type: "rotate", axis: "x", amount: 30},
-        { target: "sphere1", type: "translate", amount: [2.5, 2.5, 0]},
-        { target: "origin", type: "scale", amount: [0.4, 0.4, 0.4]},
-        { target: "origin", type: "rotate", axis: "x", amount: 60},
-        { target: "box1", type: "rotate", axis: "y", amount: 75},
-        { target: "box1", type: "rotate", axis: "x", amount: 60},
-        { target: "box1", type: "rotate", axis: "z", amount: 45},
-        { target: "box1", type: "translate", amount: [-2, 2, -1]},
-    ];
-
-    d.camera = {
-        position: [0, 0, 10],
-        direction: vNormalize([0, 0, -1]),
-        up: vNormalize([0, 1, 0])
-    };
-
-    d.ambientIntensity = [0.1, 0.1, 0.1];
-
-    var findPrimitive = function(id) {
-        for (var i in d.primitives) {
-            if (d.primitives[i].id == id) return d.primitives[i];
+    var findPrimitive = function(primitives, id) {
+        for (var i in primitives) {
+            if (primitives[i].id == id) return primitives[i];
         }
     };
 
-    var preprocessPrimitives = function() {
-        for (var i in d.primitives) {
-            var primitive = d.primitives[i];
+    var preprocessPrimitives = function(primitives, transformations) {
+        for (var i in primitives) {
+            var primitive = primitives[i];
             if (!primitive.mTrans) {
                 primitive.mTrans = m4();
                 primitive.mTransNoScale = m4();
@@ -105,11 +40,26 @@ function drawImage() {
             else if (primitive.type === "box") {
                 primitive.bounds = [[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]];
             }
+            else if (primitive.type === "model") {
+                if (!primitive.triangles)
+                    primitive.triangles = [];
+
+                if (primitive.triangleRawString) {
+                    var triangles = primitive.triangleRawString.split(" ");
+                    primitive.triangles = [];
+                    for (var j = 0; j < triangles.length; j++) triangles[j] = parseFloat(triangles[j]);
+                    for (var j = 0; j < triangles.length; j += 9) {
+                        primitive.triangles.push([[triangles[j], triangles[j+1], triangles[j+2]], 
+                                                   [triangles[j+3], triangles[j+4], triangles[j+5]],
+                                                   [triangles[j+6], triangles[j+7], triangles[j+8]]]);
+                    }
+                }
+            }
         }
 
-        for (var i in d.transformations) {
-            var t = d.transformations[i];
-            var primitive = findPrimitive(t.target);
+        for (var i in transformations) {
+            var t = transformations[i];
+            var primitive = findPrimitive(primitives, t.target);
             if (!primitive) continue;
 
             if (t.type === "translate") {
@@ -129,16 +79,56 @@ function drawImage() {
             }
         }
 
-        for (var i in d.primitives) {
-            var primitive = d.primitives[i];
+        for (var i in primitives) {
+            var primitive = primitives[i];
             if (primitive.type === "plane") {
                 primitive.normal = m4Multv3(primitive.mTransNoTranslate, [0, 1, 0]);
                 primitive.point = m4Multv3(primitive.mTransNoScale, [0, 0, 0]);
+            }
+            else if (primitive.type === "triangle") {
+                primitive.v1 = m4Multv3(primitive.mTrans, primitive.v1);
+                primitive.v2 = m4Multv3(primitive.mTrans, primitive.v2);
+                primitive.v3 = m4Multv3(primitive.mTrans, primitive.v3);
+
+                primitive.e1 = v3Sub(primitive.v2, primitive.v1);
+                primitive.e2 = v3Sub(primitive.v3, primitive.v1);
+                primitive.normal = vNormalize(vCross3(primitive.e1, primitive.e2));
+            }
+            else if (primitive.type === "model") {
+                for (var j in primitive.triangles) {
+                    primitive.triangles[j] = {
+                        v1: primitive.triangles[j][0],
+                        v2: primitive.triangles[j][1],
+                        v3: primitive.triangles[j][2],
+                        type: "triangle",
+                        mTrans: primitive.mTrans,
+                        mTransNoScale: primitive.mTransNoScale,
+                        mTransNoTranslate: primitive.mTransNoTranslate,
+                        mTransRotateAndInvScale: primitive.mTransRotateAndInvScale
+                    };
+                }
+
+                preprocessPrimitives(primitive.triangles, []);
+                primitive.bounds = [[1000000000, 1000000000, 1000000000], [-1000000000, -1000000000, -1000000000]];
+                
+                for (var j in primitive.triangles) {
+                    for (var t = 1; t <= 3; t++) {
+                        for (var c = 0; c < 3; c++) {
+                            if (primitive.triangles[j]["v"+t][c] < primitive.bounds[0][c])
+                                primitive.bounds[0][c] = primitive.triangles[j]["v"+t][c];
+                            else if (primitive.triangles[j]["v"+t][c] > primitive.bounds[1][c])
+                                primitive.bounds[1][c] = primitive.triangles[j]["v"+t][c];
+                        }
+                    }
+                }
+            }
+
+            if (primitive.type === "plane" || primitive.type === "triangle") {
                 primitive.mTrans = m4();
                 primitive.mTransNoTranslate = m4();
                 primitive.mTransNoScale = m4();
                 primitive.mTransRotateAndInvScale = m4();
-            } 
+            }
         }
     };
 
@@ -162,32 +152,37 @@ function drawImage() {
         var max_y = max_x / aspectRatio;
         console.log("max_x is " + max_x + ". max_y is " + max_y);
 
-        useWorkers = false;
         if (useWorkers) {
             var workers = [];
-            var numWorkers = 3;
             for (var i = 0; i < numWorkers; i++) {
                 workers[i] = new Worker("worker.js");
-                workers[i].postMessage({action: "setD", d: d});
+                workers[i].postMessage({action: "setD", d: d, max_x: max_x, max_y : max_y, width: width, height: height});
                 workers[i].onmessage = function(e) {
-                    writePixel(e.data.x, e.data.y, e.data.color[0], e.data.color[1], e.data.color[2], 255);
+                    if (e.data.action === "getPixels") {
+                        for (var i in e.data.pixels) {
+                            var pixel = e.data.pixels[i];
+                            writePixel(pixel.x, pixel.y, pixel.color[0], pixel.color[1], pixel.color[2], 255);
+                        }
 
-                    if ((e.data.x === width - i && e.data.y % 50 == 0) || (e.data.y === (height - 1) && e.data.x > width - numWorkers - 1))
-                        updateCanvas();
+                        if (e.data.pixels[0].y % 20 == 0 || e.data.pixels[0].y > height - 1 - (numWorkers * lineSkip))
+                            updateCanvas();
+                    }
                 };
+            }
+
+            for (var y = 0; y < height; y += lineSkip) {
+                var rays = [];
+
+                postMessageCalls++;
+                workers[(y / lineSkip) % numWorkers].postMessage({y1: y, y2: y + lineSkip, action: "getPixels"});
             }
         }
         else {
             window.d = d;
-        }
 
-        for (var y = 0; y < height; y++) {
-            for (var x = 0; x < width; x++) {
-                var ray = vNormalize(vAdd(d.camera.direction, [x / width * max_x - (max_x/2), -(y / height * max_y) + (max_y/2), 0]));
-                if (useWorkers) {
-                    workers[(y * width + x) % numWorkers].postMessage({action: "getPixel", ray: ray, x: x, y: y});
-                }
-                else {
+            for (var y = 0; y < height; y++) {
+                for (var x = 0; x < width; x++) {
+                    var ray = vNormalize(vAdd(d.camera.direction, [x / width * max_x - (max_x/2), -(y / height * max_y) + (max_y/2), 0]));
                     var color = getColorForRay(ray);
                     writePixel(x, y, color[0], color[1], color[2], 255);
                 }
@@ -196,12 +191,14 @@ function drawImage() {
 
         updateCanvas();
     }
-    preprocessPrimitives();
+    preprocessPrimitives(d.primitives, d.transformations);
     writePixels();
 
     return d;
 }
 
 $(document).ready(function() {
-    window.d = drawImage();
+    $.getJSON("scenes/model.json", function(d) {
+        window.d = drawImage(d);
+    });
 });

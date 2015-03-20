@@ -46,7 +46,10 @@ vNeg = function(v1) {
 vInv = function(v1) {
     var result = [];
     for (var i = 0; i < v1.length; i++) {
-        result[i] = 1/v1[i];
+        if (v1[i] === 0)
+            result[i] = 1000000000000000000000000000000000;
+        else
+            result[i] = 1/v1[i];
     }
     return result;
 }
