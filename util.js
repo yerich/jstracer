@@ -5,6 +5,7 @@ useWorkers = true;
 lineSkip = 5;
 numWorkers = 8;
 postMessageCalls = 0;
+maxReflections = 5;
 
 log = function(m, r, reset) {
     if (!r) return console.log(m);
@@ -49,6 +50,13 @@ vNeg = function(v1) {
         result[i] = -v1[i];
     }
     return result;
+}
+
+vEq = function(v1, v2) {
+    for (var i = 0; i < v1.length; i++) {
+        if (v1[i] != v2[i]) return false;
+    }
+    return true;
 }
 
 vInv = function(v1) {

@@ -103,6 +103,9 @@ function drawImage(data) {
             if (!primitive.mTrans) {
                 initPrimitiveMTrans(primitive);
             }
+            if (primitive.reflection) {
+                primitive.reflectionInv = vSub([1, 1, 1], primitive.reflection);
+            }
 
             if (primitive.type === "sphere") {
                 primitive.radius = 1;
@@ -299,7 +302,7 @@ function drawImage(data) {
             for (var y = 0; y < height; y++) {
                 for (var x = 0; x < width; x++) {
                     var ray = vNormalize(vAdd(d.camera.direction, [x / width * max_x - (max_x/2), -(y / height * max_y) + (max_y/2), 0]));
-                    var color = getColorForRay(ray);
+                    var color = getColorForRay(d.camera.position, ray, 0);
                     writePixel(x, y, color[0], color[1], color[2], 255);
                 }
             }
@@ -336,7 +339,7 @@ function drawImage(data) {
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/model_many.json", function(d) {
+    $.getJSON("scenes/simple_reflect.json", function(d) {
         window.d = drawImage(d);
     });
 });

@@ -44,6 +44,7 @@ function intersectSphere(primitive, cameraStart, cameraDir, cameraRayRatio, invT
             hitPoint: hitPoint
         }
     }
+    return false;
 }
 
 function intersectPlane(primitive, cameraStart, cameraDir, cameraRayRatio, resultOnly, position) {
@@ -270,16 +271,16 @@ function checkLightRayForShadow(result, light, hitPointToLightN, hitPointToLight
     return false;
 }
 
-function getColorForRay(rayN) {
+function getColorForRay(cameraPosition, rayN, reflections) {
     var zFar = 10000000000000;
     var color = [0, 0, 0];
 
     for (var i = 0; i < d.primitives.length; i++) {
         var primitive = d.primitives[i];
-        var result = intersect(primitive, d.camera.position, rayN);
+        var result = intersect(primitive, cameraPosition, rayN);
 
-        if (result.t !== false && result.t > 0) {
-            var hitPointToCamera = v3Sub(d.camera.position, result.hitPoint);  // V
+        if (result.t !== false && result.t > e) {
+            var hitPointToCamera = v3Sub(cameraPosition, result.hitPoint);  // V
             var hitPointToCameraDist = vLen(hitPointToCamera);
             if (hitPointToCameraDist > zFar)
                 continue;
@@ -287,49 +288,63 @@ function getColorForRay(rayN) {
             var hitPointToCameraN = vNormalize(hitPointToCamera);
 
             zFar = hitPointToCameraDist;
-            color = [0, 0, 0];
+            var ambientColor = vCompMultv(primitive.ambientColor, d.ambientIntensity);
 
-            for (var j = 0; j < d.lights.length; j++) {
-                var light = d.lights[j];
+            color = ambientColor;
 
-                var ambientColor = vCompMultv(primitive.ambientColor, d.ambientIntensity);
+            var hasReflection = false;
+            if (primitive.reflection && !vEq(primitive.reflection, [0, 0, 0]) && reflections <= maxReflections) {
+                var hitPointToCameraR = vNeg(v3Sub(hitPointToCameraN, vMult(result.normal, 2 * (vDot(hitPointToCameraN, result.normal)))));
+                var reflectColor = vCompMultv(getColorForRay(result.hitPoint, hitPointToCameraR, reflections + 1), primitive.reflection);
+                var hasReflection = true;
+            }
 
-                // compute color based on Phong reflection model
-                // http://en.wikipedia.org/wiki/Phong_reflection_model
-                var hitPointToLight = v3Sub(light.center, result.hitPoint);  // L
-                var hitPointToLightN = vNormalize(hitPointToLight);
-                var hitPointToLightDist = vLen(hitPointToLight);
+            if (!primitive.reflection || !vEq(primitive.reflection, [1, 1, 1]) || reflections > maxReflections) {
+                for (var j = 0; j < d.lights.length; j++) {
+                    var light = d.lights[j];
 
-                if (checkLightRayForShadow(result, light, hitPointToLightN, hitPointToLightDist)) {
-                    color = vAdd(color, ambientColor);
-                    continue;
-                }
+                    // compute color based on Phong reflection model
+                    // http://en.wikipedia.org/wiki/Phong_reflection_model
+                    var hitPointToLight = v3Sub(light.center, result.hitPoint);  // L
+                    var hitPointToLightN = vNormalize(hitPointToLight);
+                    var hitPointToLightDist = vLen(hitPointToLight);
 
-                var lightToHitPoint = vNeg(hitPointToLight);
-                var lightToHitPointN = vNeg(hitPointToLightN);
+                    if (checkLightRayForShadow(result, light, hitPointToLightN, hitPointToLightDist)) {
+                        if (hasReflection) {
+                            color = vAdd(color, reflectColor);
+                        }
+                        continue;
+                    }
 
-                var hitPointToLightR = v3Sub(lightToHitPointN, vMult(result.normal, 2 * (vDot(lightToHitPointN, result.normal))));    // R
+                    var lightToHitPoint = vNeg(hitPointToLight);
+                    var lightToHitPointN = vNeg(hitPointToLightN);
 
-                var lightFalloff = 1 / (light.falloff[0] + light.falloff[1] * hitPointToLightDist + light.falloff[2] * hitPointToLightDist * hitPointToLightDist);
-                //if (primitive.type === "triangle")
-                //    var diffuseColor = vMult(primitive.diffuseColor, Math.abs(vDot(result.normal, hitPointToLightN) * lightFalloff));
-                //else
+                    var hitPointToLightR = v3Sub(lightToHitPointN, vMult(result.normal, 2 * (vDot(lightToHitPointN, result.normal))));    // R
+
+                    var lightFalloff = 1 / (light.falloff[0] + light.falloff[1] * hitPointToLightDist + light.falloff[2] * hitPointToLightDist * hitPointToLightDist);
                     var diffuseColor = vMult(primitive.diffuseColor, Math.max(0, vDot(result.normal, hitPointToLightN) * lightFalloff));
-                diffuseColor = vCompMultv(diffuseColor, light.diffuseIntensity);
-                //diffuseColor = [0, 0, 0];
+                    diffuseColor = vCompMultv(diffuseColor, light.diffuseIntensity);
+                    //diffuseColor = [0, 0, 0];
 
-                //if (primitive.type === "triangle" || primitive.type === "model")
-                //    var specularFactor = Math.abs(Math.pow(vDot(hitPointToLightR, hitPointToCameraN), 25));
-                //else
                     var specularFactor = Math.max(0.0, Math.pow(vDot(hitPointToLightR, hitPointToCameraN), 25));
-                var specularColor = vCompMultv(vMult(primitive.specularColor, specularFactor), light.specularIntensity);
-                //specularColor = [0, 0, 0];
+                    var specularColor = vCompMultv(vMult(primitive.specularColor, specularFactor), light.specularIntensity);
+                    //specularColor = [0, 0, 0];
 
-                color = vAdd(color, vAdd3(diffuseColor, specularColor, ambientColor));
-                //color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
-                //if (Math.random() < 0.1 && primitive.id == "origin") console.log(lightToHitPointN);
-                //if (primitive.id == "model1") 
-                //    color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
+                    if (!hasReflection)
+                        color = vAdd(color, vAdd(diffuseColor, specularColor));
+                    else {
+                        color = vAdd3(color, reflectColor, vCompMultv(vAdd(diffuseColor, specularColor), primitive.reflectionInv));
+                    }
+                    //color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
+                    //if (Math.random() < 0.1 && primitive.id == "origin") console.log(lightToHitPointN);
+                    //if (primitive.id == "model1") 
+                    //    color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
+                }
+            }
+            else {
+                // pure reflection
+                
+                color = reflectColor;
             }
         }
     }
@@ -339,7 +354,7 @@ function getColorForRay(rayN) {
 
 onmessage = function(e) {
     if (e.data.action === "getPixel") {
-        var color = getColorForRay(e.data.ray);
+        var color = getColorForRay(d.camera.position, e.data.ray, 0);
         postMessage({
             color: color,
             x: e.data.x,
@@ -359,7 +374,7 @@ onmessage = function(e) {
             var rayData = rays[i];
             var ray = vNormalize(vAdd(d.camera.direction, [rayData.x / width * max_x - (max_x/2), -(rayData.y / height * max_y) + (max_y/2), 0]));
             data.push({
-                color: getColorForRay(ray),
+                color: getColorForRay(d.camera.position, ray, 0),
                 x: rayData.x,
                 y: rayData.y
             });

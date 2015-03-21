@@ -7,15 +7,23 @@
         {
             "type": "plane",
             "id": "plane1",
-            "diffuseColor": [255, 255, 255],
+            "diffuseColor": [0, 156, 255],
             "specularColor": [0, 0, 0],
-            "ambientColor": [255, 255, 255]
+            "ambientColor": [1, 1, 1]
         }, {
             "type": "plane",
             "id": "planeback",
-            "diffuseColor": [0, 156, 255],
+            "diffuseColor": [255, 255, 255],
             "specularColor": [0, 0, 0],
             "ambientColor": [0, 0, 0],
+            "reflection": [0.5, 0.5, 0.5]
+        }, {
+            "type": "plane",
+            "id": "planefront",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [0, 0, 0],
+            "reflection": [0.5, 0.5, 0.5]
         }, {
             "type": "model",
             "id": "model1",
@@ -109,6 +117,15 @@
             "target": "planeback",
             "type": "translate",
             "amount": [0, 0, -3]
+        }, {
+            "target": "planefront",
+            "type": "rotate",
+            "amount": 90,
+            "axis": "x"
+        }, {
+            "target": "planefront",
+            "type": "translate",
+            "amount": [0, 0, 13]
         }, {
             "target": "model1",
             "type": "rotate",
