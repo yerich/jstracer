@@ -24,7 +24,7 @@ function drawImage(data) {
 
     var makeUniformModelGrid = function(model) {
         model.gridCount = Math.min(2, Math.round(Math.pow(model.triangles.length / 50, 1/3)));
-        console.log(model.triangles.length, model.gridCount);
+        
         if (model.gridCount <= 1)
             return;
         
@@ -44,7 +44,6 @@ function drawImage(data) {
                         type: "model",
                         id: model.id + "_partition"+i
                     };
-                    initPrimitiveMTrans(partition);
                     
                     partition.bounds = [
                         [model.bounds[0][0] + (x / gridCount) * boundsDiff[0],
