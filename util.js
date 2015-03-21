@@ -1,8 +1,8 @@
 e = 0.00000000001;
 
 usePartitions = true;
-useWorkers = false;
-lineSkip = 1;
+useWorkers = true;
+lineSkip = 5;
 numWorkers = 8;
 postMessageCalls = 0;
 

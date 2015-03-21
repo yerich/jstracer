@@ -92,13 +92,7 @@ function drawImage(data) {
             }
         }
 
-                    
-        for (var t in model.triangles) {
-            var tri = model.triangles[t];
-            if (tri.used === false) {
-                console.log(tri);
-            }
-        }
+        delete model.triangles;
     };
     
     // Note: after preprocessing, spheres and boxes (except bounding boxes) are defined in model space with a transformation,
@@ -141,6 +135,8 @@ function drawImage(data) {
                                                    [triangles[j+3], triangles[j+4], triangles[j+5]],
                                                    [triangles[j+6], triangles[j+7], triangles[j+8]]]);
                     }
+
+                    primitive.triangleRawString = "";
                 }
             }
         }
@@ -269,7 +265,7 @@ function drawImage(data) {
             for (var i = 0; i < numWorkers; i++) {
                 workers[i] = new Worker("worker.js");
                 workerOutstandingMessages[i] = 0;
-                workers[i].postMessage({action: "setD", d: d, max_x: max_x, max_y : max_y, width: width, height: height});
+                workers[i].postMessage({action: "setD", d: JSON.stringify(d), max_x: max_x, max_y : max_y, width: width, height: height});
                 (function() { 
                     workers[i].onmessage = function(e) {
                         workerOutstandingMessages[i]--;
@@ -341,7 +337,7 @@ function drawImage(data) {
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/model.json", function(d) {
+    $.getJSON("scenes/model_many.json", function(d) {
         window.d = drawImage(d);
     });
 });
