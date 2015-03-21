@@ -3,7 +3,6 @@ if (typeof importScripts === "undefined")
 
 importScripts('util.js');
 
-e = 0.00000000001
 d = {};
 
 var findPrimitive = function(id) {
@@ -12,13 +11,20 @@ var findPrimitive = function(id) {
     }
 };
 
+// triangles, planes and bounding boxes are treated in world space and
+// don't have any further transformations performed in the intersect function.
+// spheres are treated in model space, and the ray is transformed from world
+// space to model space insde the method.
+// 
+// This method always takes camera coordinates in world space, and returns
+// all values in world space as well.
 function intersect(primitive, position, ray, resultOnly) {
     //console.log("called on ", primitive);
     var invTrans = mTransInv(primitive);
     var invTransNoTranslate = mTransNoTranslateInv(primitive);
     var invTransNoScale = mTransNoScaleInv(primitive);
     
-    if (primitive.type === "triangle" || primitive.type === "boundingBox") {
+    if (primitive.type === "triangle" || primitive.type === "boundingBox" || primitive.type === "plane") {
         var cameraStart = position;
         var cameraDir = ray;
         var cameraRayRatio = 1;
@@ -214,10 +220,21 @@ function intersect(primitive, position, ray, resultOnly) {
         if (boundingBoxResult === false) return false;
 
         var bestResult = false;
-        for (var i = 0; i < primitive.triangles.length; i++) {
-            var triangleResult = intersect(primitive.triangles[i], position, ray, resultOnly);
-            if (bestResult === false || triangleResult.t < bestResult.t)
-                bestResult = triangleResult;
+
+        if (primitive.hasPartitions && usePartitions) {
+            for (var i = 0; i < primitive.partitions.length; i++) {
+                if (primitive.partitions[i] === false) continue;
+                var partitionResult = intersect(primitive.partitions[i], position, ray, resultOnly);
+                if (bestResult === false || partitionResult.t < bestResult.t)
+                    bestResult = partitionResult;
+            }
+        }
+        else {
+            for (var i = 0; i < primitive.triangles.length; i++) {
+                var triangleResult = intersect(primitive.triangles[i], position, ray, resultOnly);
+                if (bestResult === false || triangleResult.t < bestResult.t)
+                    bestResult = triangleResult;
+            }
         }
 
         return bestResult;

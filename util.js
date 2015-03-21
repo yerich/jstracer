@@ -1,3 +1,11 @@
+e = 0.00000000001;
+
+usePartitions = true;
+useWorkers = false;
+lineSkip = 1;
+numWorkers = 8;
+postMessageCalls = 0;
+
 log = function(m, r, reset) {
     if (!r) return console.log(m);
     if (!window.rlog || reset) {

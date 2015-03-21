@@ -49,13 +49,8 @@
             "amount": [0, 0, -3]
         }, {
             "target": "model1",
-            "type": "rotate",
-            "axis": "y",
-            "amount": 20
-        }, {
-            "target": "model1",
-            "type": "translate",
-            "amount": [2, 0, 0]
+            "type": "scale",
+            "amount": [2, 2, 2]
         }, {
             "target": "model1",
             "type": "rotate",

@@ -1,9 +1,3 @@
-e = 0.00001;
-useWorkers = true;
-lineSkip = 2;
-numWorkers = 8;
-postMessageCalls = 0;
-
 function drawImage(data) {
     var c = document.getElementById("render");
     var ctx = c.getContext("2d");
@@ -12,6 +6,8 @@ function drawImage(data) {
     var height = c.height;
     var canvasData = ctx.getImageData(0, 0, width, height);
     var d = data;
+    var renderStart;
+    var renderEnd;
 
     var findPrimitive = function(primitives, id) {
         for (var i in primitives) {
@@ -19,15 +15,100 @@ function drawImage(data) {
         }
     };
 
+    var initPrimitiveMTrans = function(primitive) {
+        primitive.mTrans = m4();
+        primitive.mTransNoScale = m4();
+        primitive.mTransRotateAndInvScale = m4();
+        primitive.mTransNoTranslate = m4();
+    }
+
+    var makeUniformModelGrid = function(model) {
+        model.gridCount = Math.min(2, Math.round(Math.pow(model.triangles.length / 50, 1/3)));
+        console.log(model.triangles.length, model.gridCount);
+        if (model.gridCount <= 1)
+            return;
+        
+        model.partitions = [];
+        model.hasPartitions = true;
+        var boundsDiff = [model.bounds[1][0] - model.bounds[0][0],
+                          model.bounds[1][1] - model.bounds[0][1],
+                          model.bounds[1][2] - model.bounds[0][2]];
+        
+        var gridCount = model.gridCount;
+        for (var x = 0; x < gridCount; x++) {
+            for (var y = 0; y < gridCount; y++) {
+                for (var z = 0; z < gridCount; z++) {
+                    var i = x * gridCount * gridCount + y * gridCount + z;
+
+                    var partition = {
+                        type: "model",
+                        id: model.id + "_partition"+i
+                    };
+                    initPrimitiveMTrans(partition);
+                    
+                    partition.bounds = [
+                        [model.bounds[0][0] + (x / gridCount) * boundsDiff[0],
+                         model.bounds[0][1] + (y / gridCount) * boundsDiff[1],
+                         model.bounds[0][2] + (z / gridCount) * boundsDiff[2]],
+                        [model.bounds[0][0] + ((x + 1) / gridCount) * boundsDiff[0],
+                         model.bounds[0][1] + ((y + 1) / gridCount) * boundsDiff[1],
+                         model.bounds[0][2] + ((z + 1) / gridCount) * boundsDiff[2]],
+                    ];
+
+                    partition.triangles = [];
+                    for (var t in model.triangles) {
+                        var tri = model.triangles[t];
+                        for (var v = 1; v <= 3; v++) {
+                            if (tri["v"+v][0] >= partition.bounds[0][0] - e && tri["v"+v][0] <= partition.bounds[1][0] + e &&
+                                    tri["v"+v][1] >= partition.bounds[0][1] - e && tri["v"+v][1] <= partition.bounds[1][1] + e &&
+                                    tri["v"+v][2] >= partition.bounds[0][2] - e && tri["v"+v][2] <= partition.bounds[1][2] + e) {
+                                partition.triangles.push(tri);
+                                tri.used = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    partition.bounds = [[1000000000, 1000000000, 1000000000], [-1000000000, -1000000000, -1000000000]];
+                    for (var j in partition.triangles) {
+                        for (var t = 1; t <= 3; t++) {
+                            for (var c = 0; c < 3; c++) {
+                                if (partition.triangles[j]["v"+t][c] < partition.bounds[0][c])
+                                    partition.bounds[0][c] = partition.triangles[j]["v"+t][c];
+                                else if (partition.triangles[j]["v"+t][c] > partition.bounds[1][c])
+                                    partition.bounds[1][c] = partition.triangles[j]["v"+t][c];
+                            }
+                        }
+                    }
+
+                    if (partition.triangles.length > 0) {
+                        model.partitions.push(partition);
+                        if (partition.triangles.length < model.triangles.length - 5)
+                            makeUniformModelGrid(partition);
+                    }
+                    else 
+                        model.partitions.push(false);
+                }
+            }
+        }
+
+                    
+        for (var t in model.triangles) {
+            var tri = model.triangles[t];
+            if (tri.used === false) {
+                console.log(tri);
+            }
+        }
+    };
+    
+    // Note: after preprocessing, spheres and boxes (except bounding boxes) are defined in model space with a transformation,
+    // while planes and triangles have their coordinates converted into world space.
     var preprocessPrimitives = function(primitives, transformations) {
         // Initialize Transformation Matrices
         for (var i in primitives) {
             var primitive = primitives[i];
             if (!primitive.mTrans) {
-                primitive.mTrans = m4();
-                primitive.mTransNoScale = m4();
-                primitive.mTransNoTranslate = m4();
-                primitive.mTransRotateAndInvScale = m4();
+                initPrimitiveMTrans(primitive);
             }
 
             if (primitive.type === "sphere") {
@@ -131,6 +212,8 @@ function drawImage(data) {
                         }
                     }
                 }
+
+                makeUniformModelGrid(primitive);
             }
 
             if (primitive.type === "plane" || primitive.type === "triangle") {
@@ -155,36 +238,64 @@ function drawImage(data) {
         ctx.putImageData(canvasData, 0, 0);
     }
 
+    function updateTimer() {
+        if (renderEnd) {
+            $("#timer").text(renderEnd - renderStart);
+        }
+        else {
+            var time = +new Date();
+            $("#timer").text(time - renderStart);
+        }
+    }
+
+    function checkWorkerTimers(workerOutstandingMessages) {
+        for (var i in workerOutstandingMessages) {
+            if (workerOutstandingMessages[i] > 0) return false;
+        }
+        renderEnd = +new Date();
+    }
+
     function writePixels() {
         var aspectRatio = width / height;
         var fov = 40;
         var max_x = Math.tan(degToRad(fov));
         var max_y = max_x / aspectRatio;
+        renderStart = +new Date();
         console.log("max_x is " + max_x + ". max_y is " + max_y);
 
         if (useWorkers) {
             var workers = [];
+            var workerOutstandingMessages = [];
             for (var i = 0; i < numWorkers; i++) {
                 workers[i] = new Worker("worker.js");
+                workerOutstandingMessages[i] = 0;
                 workers[i].postMessage({action: "setD", d: d, max_x: max_x, max_y : max_y, width: width, height: height});
-                workers[i].onmessage = function(e) {
-                    if (e.data.action === "getPixels") {
-                        for (var i in e.data.pixels) {
-                            var pixel = e.data.pixels[i];
-                            writePixel(pixel.x, pixel.y, pixel.color[0], pixel.color[1], pixel.color[2], 255);
+                (function() { 
+                    workers[i].onmessage = function(e) {
+                        workerOutstandingMessages[i]--;
+                        if (e.data.action === "getPixels") {
+                            for (var p in e.data.pixels) {
+                                var pixel = e.data.pixels[p];
+                                writePixel(pixel.x, pixel.y, pixel.color[0], pixel.color[1], pixel.color[2], 255);
+                            }
+
+                            if (e.data.pixels[0].y % lineSkip == 0 || e.data.pixels[0].y > height - 1 - (numWorkers * lineSkip))
+                                updateCanvas();
                         }
 
-                        if (e.data.pixels[0].y % lineSkip == 0 || e.data.pixels[0].y > height - 1 - (numWorkers * lineSkip))
-                            updateCanvas();
-                    }
-                };
+                        checkWorkerTimers(workerOutstandingMessages);
+                        updateTimer();
+                    };
+                })(i);
             }
 
             for (var y = 0; y < height; y += lineSkip) {
                 var rays = [];
+                var workerNum = (y / lineSkip) % numWorkers
 
                 postMessageCalls++;
-                workers[(y / lineSkip) % numWorkers].postMessage({y1: y, y2: y + lineSkip, action: "getPixels"});
+                workers[workerNum].postMessage({y1: y, y2: y + lineSkip, action: "getPixels"});
+                workerOutstandingMessages[workerNum]++;
             }
         }
         else {
@@ -197,6 +308,9 @@ function drawImage(data) {
                     writePixel(x, y, color[0], color[1], color[2], 255);
                 }
             }
+
+            renderEnd = +new Date();
+            updateTimer();
         }
 
         updateCanvas();
