@@ -106,6 +106,9 @@ function drawImage(data) {
             if (primitive.reflection) {
                 primitive.reflectionInv = vSub([1, 1, 1], primitive.reflection);
             }
+            if (primitive.refraction) {
+                primitive.refractionInv = vSub([1, 1, 1], primitive.refraction);
+            }
 
             if (primitive.type === "sphere") {
                 primitive.radius = 1;

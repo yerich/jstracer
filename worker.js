@@ -19,18 +19,18 @@ function intersectSphere(primitive, cameraStart, cameraDir, cameraRayRatio, invT
     var c4 = vDot(centerDiff, centerDiff) - (primitive.radius * primitive.radius);
     var disc = b * b - c4;
 
-    if (disc <= 0) {
+    if (disc <= e) {
         return false;
     }
     var sqrt_disc = Math.sqrt(disc);
 
     var result = -b - sqrt_disc;
 
-    if (result < 0) {
+    if (result < e) {
         result = -b + sqrt_disc;
     }
 
-    if (result > 0) {
+    if (result > e) {
         if (resultOnly) return result / cameraRayRatio;
 
         var hitPoint = vAdd(centerDiff, vMult(cameraDir, result));
@@ -292,14 +292,60 @@ function getColorForRay(cameraPosition, rayN, reflections) {
 
             color = ambientColor;
 
+            var hasRefraction = false;
+            if (primitive.refraction && !vEq(primitive.refraction, [0, 0, 0]) && reflections <= maxReflections && refraction) {
+                hasRefraction = true;
+                hasReflection - false;
+
+                var hitpointToCameraDot = vDot(result.normal, hitPointToCameraN);
+                var incidentAngle = Math.acos(hitpointToCameraDot);
+                //console.log(hitpointToCameraDot, radToDeg(incidentAngle));
+
+                var cameraToHitPointN = vNeg(hitPointToCameraN);
+                //var refractColor = getColorForRay(result.hitPoint, cameraToHitPointN, reflections + 1);
+                //color = refractColor;
+                //continue;
+
+                // http://steve.hollasch.net/cgindex/render/refraction.txt
+                if (hitpointToCameraDot >= 0) {
+                    var eta = 1 / primitive.refractionIndex;
+                    var c1 = vDot(hitPointToCameraN, result.normal);
+                }
+                else {
+                    var eta = primitive.refractionIndex;
+                    var c1 = -vDot(hitPointToCameraN, result.normal);
+                }
+                
+                var cs2 = 1 - eta * eta * (1 - c1 * c1);
+                if (cs2 >= 0) {
+                    var refractDirection = vAdd(vMult(cameraToHitPointN, eta), vMult(result.normal, eta * c1 - Math.sqrt(cs2)));
+                    if (eta * c1 - Math.sqrt(cs2) != 0) {
+                        //console.log("Wtf ", eta, cs2, c1*c1, Math.sqrt(cs2), c1)
+                    }
+
+                    //console.log(eta, c1, cs2, eta * c1 - Math.sqrt(cs2));
+                    //console.log(result.hitPoint, cameraToHitPointN, hitpointToCameraDot, refractDirection);
+
+                    var refractColor = getColorForRay(result.hitPoint, refractDirection, reflections + 1);
+                    color = refractColor;
+                    continue;
+                }
+                else {
+                    hasReflection = true;
+                    primitive.reflection = primitive.refraction;
+                }
+
+                //color = [(hitpointToCameraDot + 1) * 128, (hitpointToCameraDot + 1) * 128, (hitpointToCameraDot + 1) * 128];
+            }
+
             var hasReflection = false;
-            if (primitive.reflection && !vEq(primitive.reflection, [0, 0, 0]) && reflections <= maxReflections) {
+            if (primitive.reflection && !vEq(primitive.reflection, [0, 0, 0]) && reflections <= maxReflections && reflection) {
                 var hitPointToCameraR = vNeg(v3Sub(hitPointToCameraN, vMult(result.normal, 2 * (vDot(hitPointToCameraN, result.normal)))));
                 var reflectColor = vCompMultv(getColorForRay(result.hitPoint, hitPointToCameraR, reflections + 1), primitive.reflection);
                 var hasReflection = true;
             }
 
-            if (!primitive.reflection || !vEq(primitive.reflection, [1, 1, 1]) || reflections > maxReflections) {
+            if (!hasReflection || !vEq(primitive.reflection, [1, 1, 1])) {
                 for (var j = 0; j < d.lights.length; j++) {
                     var light = d.lights[j];
 
@@ -329,11 +375,12 @@ function getColorForRay(cameraPosition, rayN, reflections) {
                     var specularFactor = Math.max(0.0, Math.pow(vDot(hitPointToLightR, hitPointToCameraN), 25));
                     var specularColor = vCompMultv(vMult(primitive.specularColor, specularFactor), light.specularIntensity);
                     //specularColor = [0, 0, 0];
+                    var surfaceColor = vAdd(diffuseColor, specularColor);
 
                     if (!hasReflection)
-                        color = vAdd(color, vAdd(diffuseColor, specularColor));
+                        color = vAdd(color, surfaceColor);
                     else {
-                        color = vAdd3(color, reflectColor, vCompMultv(vAdd(diffuseColor, specularColor), primitive.reflectionInv));
+                        color = vAdd3(color, reflectColor, vCompMultv(surfaceColor, primitive.reflectionInv));
                     }
                     //color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
                     //if (Math.random() < 0.1 && primitive.id == "origin") console.log(lightToHitPointN);
@@ -343,7 +390,6 @@ function getColorForRay(cameraPosition, rayN, reflections) {
             }
             else {
                 // pure reflection
-                
                 color = reflectColor;
             }
         }

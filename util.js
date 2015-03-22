@@ -5,7 +5,9 @@ useWorkers = true;
 lineSkip = 5;
 numWorkers = 8;
 postMessageCalls = 0;
-maxReflections = 5;
+reflection = true;
+maxReflections = 10;
+refraction = true;
 
 log = function(m, r, reset) {
     if (!r) return console.log(m);
