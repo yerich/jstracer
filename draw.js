@@ -342,7 +342,7 @@ function drawImage(data) {
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/simple_reflect.json", function(d) {
+    $.getJSON("scenes/model_many_refract.json", function(d) {
         window.d = drawImage(d);
     });
 });
