@@ -339,7 +339,7 @@ function getColorForRay(cameraPosition, rayN, reflections) {
                 //color = [(hitpointToCameraDot + 1) * 128, (hitpointToCameraDot + 1) * 128, (hitpointToCameraDot + 1) * 128];
             }
 
-            if (primitive.reflection && !vEq(primitive.reflection, [0, 0, 0]) && reflections <= maxReflections && reflection) {
+            if (primitive.reflection && !vEq(primitive.reflection, [0, 0, 0]) && reflections <= maxReflections && ENABLE_REFLECTION) {
                 var hitPointToCameraR = vNeg(v3Sub(hitPointToCameraN, vMult(result.normal, 2 * (vDot(hitPointToCameraN, result.normal)))));
                 var reflectColor = vCompMultv(getColorForRay(result.hitPoint, hitPointToCameraR, reflections + 1), primitive.reflection);
                 var hasReflection = true;

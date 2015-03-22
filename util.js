@@ -5,9 +5,9 @@ useWorkers = true;
 lineSkip = 5;
 numWorkers = 8;
 postMessageCalls = 0;
-reflection = true;
 maxReflections = 10;
 
+ENABLE_REFLECTION = true;
 ENABLE_REFRACTION = true;
 ENABLE_DITHERING = true;
 
