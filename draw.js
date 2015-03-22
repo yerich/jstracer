@@ -229,10 +229,48 @@ function drawImage(data) {
     function writePixel(x, y, r, g, b, a) {
         var index = (x + y * width) * 4;
 
-        canvasData.data[index + 0] = r;
-        canvasData.data[index + 1] = g;
-        canvasData.data[index + 2] = b;
-        canvasData.data[index + 3] = a;
+        // Floyd-Steinberg dithering
+        // http://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering
+        if (ENABLE_DITHERING) {
+            for (var i = 0; i < 3; i++) {
+                if (i == 0)
+                    var quant_error = r - Math.floor(r);
+                if (i == 1)
+                    var quant_error = g - Math.floor(g);
+                if (i == 2)
+                    var quant_error = b - Math.floor(g);
+
+                if (x != height - 1) {
+                    canvasData.data[index + i + (width * 4)] += quant_error * 5 / 16;
+                    if (y != 0) {
+                        canvasData.data[index + i - 4] += quant_error * 3 / 16;
+                    }
+                    if (y != width-1) {
+                        canvasData.data[index + i + (width * 4) + 4] += quant_error * 1 / 16;
+                    }
+                }
+                if (y != width - 1) {
+                    canvasData.data[index + i + 4] += quant_error * 7 / 16;
+                }
+            }
+        }
+        canvasData.data[index + 0] += r;
+        canvasData.data[index + 1] += g;
+        canvasData.data[index + 2] += b;
+        canvasData.data[index + 3] += a;
+    }
+
+    function clearPixel(x, y) {
+        var index = (x + y * width) * 4;
+        canvasData.data[index + 0] = 0;
+        canvasData.data[index + 1] = 0;
+        canvasData.data[index + 2] = 0;
+        canvasData.data[index + 3] = 0;
+    }
+
+    function clearCanvas() {
+        for (var i = 0; i < (height * width) * 4; i++)
+            canvasData.data[i] = 0;
     }
 
     function updateCanvas() {
@@ -257,6 +295,8 @@ function drawImage(data) {
     }
 
     function writePixels() {
+        clearCanvas();
+
         var aspectRatio = width / height;
         var fov = 40;
         var max_x = Math.tan(degToRad(fov));
@@ -342,7 +382,7 @@ function drawImage(data) {
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/model_many_refract.json", function(d) {
+    $.getJSON("scenes/simple_reflect.json", function(d) {
         window.d = drawImage(d);
     });
 });

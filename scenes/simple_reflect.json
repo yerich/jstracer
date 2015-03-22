@@ -12,7 +12,7 @@
             "id": "origin",
             "diffuseColor": [255, 0, 0],
             "specularColor": [255, 0, 0],
-            "ambientColor": [255, 0, 0],
+            "ambientColor": [255, 0, 0]
         }, {
             "type": "plane",
             "id": "plane1",

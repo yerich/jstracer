@@ -293,9 +293,10 @@ function getColorForRay(cameraPosition, rayN, reflections) {
             color = ambientColor;
 
             var hasRefraction = false;
-            if (primitive.refraction && !vEq(primitive.refraction, [0, 0, 0]) && reflections <= maxReflections && refraction) {
+            var hasReflection = false;
+            if (primitive.refraction && !vEq(primitive.refraction, [0, 0, 0]) && reflections <= maxReflections && ENABLE_REFRACTION) {
                 hasRefraction = true;
-                hasReflection - false;
+                hasReflection = false;
 
                 var hitpointToCameraDot = vDot(result.normal, hitPointToCameraN);
                 var incidentAngle = Math.acos(hitpointToCameraDot);
@@ -338,7 +339,6 @@ function getColorForRay(cameraPosition, rayN, reflections) {
                 //color = [(hitpointToCameraDot + 1) * 128, (hitpointToCameraDot + 1) * 128, (hitpointToCameraDot + 1) * 128];
             }
 
-            var hasReflection = false;
             if (primitive.reflection && !vEq(primitive.reflection, [0, 0, 0]) && reflections <= maxReflections && reflection) {
                 var hitPointToCameraR = vNeg(v3Sub(hitPointToCameraN, vMult(result.normal, 2 * (vDot(hitPointToCameraN, result.normal)))));
                 var reflectColor = vCompMultv(getColorForRay(result.hitPoint, hitPointToCameraR, reflections + 1), primitive.reflection);

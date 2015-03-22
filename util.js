@@ -7,7 +7,9 @@ numWorkers = 8;
 postMessageCalls = 0;
 reflection = true;
 maxReflections = 10;
-refraction = true;
+
+ENABLE_REFRACTION = true;
+ENABLE_DITHERING = true;
 
 log = function(m, r, reset) {
     if (!r) return console.log(m);
