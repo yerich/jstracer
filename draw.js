@@ -1,3 +1,5 @@
+textureData = {};
+
 function drawImage(data) {
     var c = document.getElementById("render");
     var ctx = c.getContext("2d");
@@ -116,6 +118,7 @@ function drawImage(data) {
             }
             else if (primitive.type === "plane") {
                 primitive.normal = [0, 1, 0];
+                primitive.right = [1, 0, 0];
                 primitive.point = [0, 0, 0];
             }
             else if (primitive.type === "box") {
@@ -174,8 +177,10 @@ function drawImage(data) {
         for (var i in primitives) {
             var primitive = primitives[i];
             if (primitive.type === "plane") {
-                primitive.normal = m4Multv3(primitive.mTransNoTranslate, [0, 1, 0]);
-                primitive.point = m4Multv3(primitive.mTransNoScale, [0, 0, 0]);
+                primitive.normal = m4Multv3(primitive.mTransNoTranslate, primitive.normal);
+                primitive.right = m4Multv3(primitive.mTransNoTranslate, primitive.right);
+                primitive.away = vCross3(primitive.normal, primitive.right);
+                primitive.point = m4Multv3(primitive.mTransNoScale, primitive.point);
             }
             else if (primitive.type === "triangle") {
                 primitive.v1 = m4Multv3(primitive.mTrans, primitive.v1);
@@ -217,11 +222,26 @@ function drawImage(data) {
                 makeUniformModelGrid(primitive);
             }
 
+            // The primitive's corrdinates have been coverted to world space, so there's no future
+            // need to convert them any further.
             if (primitive.type === "plane" || primitive.type === "triangle") {
                 primitive.mTrans = m4();
                 primitive.mTransNoTranslate = m4();
                 primitive.mTransNoScale = m4();
                 primitive.mTransRotateAndInvScale = m4();
+            }
+
+            // Some texture processing to get height/width factors
+            if (primitive.texture) {
+                if (!primitive.textureMappedWidth)
+                    primitive.textureMappedWidth = 1;
+                if (!primitive.textureMappedHeight)
+                    primitive.textureMappedHeight = 1;
+
+                var texture = textureData[primitive.texture];
+                primitive.textureWidthFactor = texture.width / primitive.textureMappedWidth;
+                primitive.textureHeightFactor = texture.height / primitive.textureMappedHeight;
+
             }
         }
     };
@@ -241,7 +261,7 @@ function drawImage(data) {
             canvasData.data[index + 0] = r;
             canvasData.data[index + 1] = g;
             canvasData.data[index + 2] = b;
-    }
+        }
         canvasData.data[index + 3] += a;
     }
 
@@ -289,13 +309,14 @@ function drawImage(data) {
         renderStart = +new Date();
         console.log("max_x is " + max_x + ". max_y is " + max_y);
 
-        if (useWorkers) {
+        if (flags['USE_WORKERS']) {
             var workers = [];
+            var lineSkip = flags['WORKER_CHUNK_LINES'];
             var workerOutstandingMessages = [];
-            for (var i = 0; i < numWorkers; i++) {
+            for (var i = 0; i < flags['NUM_WORKERS']; i++) {
                 workers[i] = new Worker("worker.js");
                 workerOutstandingMessages[i] = 0;
-                workers[i].postMessage({action: "setD", d: JSON.stringify(d), max_x: max_x, max_y : max_y, width: width, height: height});
+                workers[i].postMessage({action: "setD", d: JSON.stringify(d), max_x: max_x, max_y : max_y, width: width, height: height, textureData: textureData});
                 (function() { 
                     workers[i].onmessage = function(e) {
                         workerOutstandingMessages[i]--;
@@ -305,7 +326,7 @@ function drawImage(data) {
                                 writePixel(pixel.x, pixel.y, pixel.color[0], pixel.color[1], pixel.color[2], 255);
                             }
 
-                            if (e.data.pixels[0].y % lineSkip == 0 || e.data.pixels[0].y > height - 1 - (numWorkers * lineSkip))
+                            if (e.data.pixels[0].y % lineSkip == 0 || e.data.pixels[0].y > height - 1 - (flags['NUM_WORKERS'] * lineSkip))
                                 updateCanvas();
                         }
 
@@ -317,7 +338,7 @@ function drawImage(data) {
 
             for (var y = 0; y < height; y += lineSkip) {
                 var rays = [];
-                var workerNum = (y / lineSkip) % numWorkers
+                var workerNum = (y / lineSkip) % flags['NUM_WORKERS']
 
                 postMessageCalls++;
                 workers[workerNum].postMessage({y1: y, y2: y + lineSkip, action: "getPixels"});
@@ -342,32 +363,103 @@ function drawImage(data) {
         updateCanvas();
     }
 
-    if (d.models) {
-        d.modelData = {};
-        for (var i = 0; i < d.models.length; i++) {
-            (function(i) {
-                $.get("models/"+d.models[i], function(response) {
-                    d.modelData[d.models[i]] = response.trim().replace(/\s+/g, " ");
-                    console.log("Model loaded: "+d.models[i]);
-                });
-            })(i);
-        }
+    // Loads an image file, calls callback when complete
+    // http://webglfundamentals.org/webgl/lessons/webgl-2-textures.html
+    var loadImage = function(url, callback) {
+        var image = new Image();
+        image.src = "textures/"+url;
+        image.onload = callback;
+        return image;
+    }
 
-        $(document).ajaxStop(function () {
+    var loadTextures = function(urls, callback) {
+        var images = [];
+        var imagesToLoad = urls.length;
+
+        // Called each time an image finished
+        // loading.
+        var onImageLoad = function() {
+            imagesToLoad--;
+            // If all the images are loaded call the callback.
+            if (imagesToLoad == 0) {
+                callback(images);
+            }
+        };
+
+        for (var ii = 0; ii < imagesToLoad; ++ii) {
+            var image = loadImage(urls[ii], onImageLoad);
+            images[ii] = image;
+        }
+    }
+
+    var doRender = function() {
+        if (modelsLoaded && texturesLoaded) {
             preprocessPrimitives(d.primitives, d.transformations);
             writePixels();
-        });
+        }
+    }
+
+    // Initial processing of data files.
+    // If this scene requires additional files, load them
+    var modelsLoaded = true;
+    var texturesLoaded = true;
+    if (d.models || d.textures) {
+        if (d.models) {
+            var modelsLoaded = false;
+            d.modelData = {};
+            for (var i = 0; i < d.models.length; i++) {
+                (function(i) {
+                    $.get("models/"+d.models[i], function(response) {
+                        d.modelData[d.models[i]] = response.trim().replace(/\s+/g, " ");
+                        console.log("Model loaded: "+d.models[i]);
+                    });
+                })(i);
+            }
+
+            $(document).ajaxStop(function () {
+                modelsLoaded = true;
+                doRender();
+            });
+        }
+
+        if (d.textures) {
+            var texturesLoaded = false;
+            loadTextures(d.textures.map(function(t) { return t.url; }), function(images) {
+                window.textureData = {};
+
+                for (var i in images) {
+                    var image = images[i];
+                    
+
+                    var canvas = document.createElement('canvas');
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+
+                    var context = canvas.getContext('2d');
+                    context.drawImage(image, 0, 0);
+
+                    var url = d.textures[i].url;
+                    window.textureData[url] = d.textures[i];
+                    window.textureData[url].width = image.width;
+                    window.textureData[url].height = image.height;
+                    window.textureData[url].data = context.getImageData(0, 0, image.width, image.height).data;
+                    console.log("Texture loaded:" + url);
+                };
+
+                texturesLoaded = true;
+                doRender();
+            });
+        }
     }
     else {
-        preprocessPrimitives(d.primitives, d.transformations);
-        writePixels();
+        doRender()
     }
 
     return d;
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/simple_refract.json", function(d) {
+    $.getJSON("scenes/model_many_refract.json", function(d) {
         window.d = drawImage(d);
     });
 });

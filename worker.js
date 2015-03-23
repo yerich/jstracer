@@ -11,6 +11,18 @@ var findPrimitive = function(id) {
     }
 };
 
+var getColorForTexture = function(textureData, mappingPoint, primitive) {
+    var x = (((Math.floor(mappingPoint[0] * primitive.textureWidthFactor)) % textureData.width) + textureData.width) % textureData.width;
+    var y = (((Math.floor(mappingPoint[1] * primitive.textureHeightFactor)) % textureData.height) + textureData.height) % textureData.height;
+
+    var offset = (y * textureData.width + x) * 4;
+    return [
+        textureData.data[offset + 0],
+        textureData.data[offset + 1],
+        textureData.data[offset + 2],
+    ];
+}
+
 function intersectSphere(primitive, cameraStart, cameraDir, cameraRayRatio, invTrans, invTransNoTranslate, invTransNoScale, resultOnly, position) {
     // http://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
     var centerDiff = v3Sub(cameraStart, primitive.center);
@@ -59,13 +71,32 @@ function intersectPlane(primitive, cameraStart, cameraDir, cameraRayRatio, resul
     if (resultOnly) return result;
 
     var hitPoint = vMult(cameraDir, result);
+    hitPoint = vAdd(m4Multv3(primitive.mTransNoTranslate, hitPoint), position);
 
-    return {
-        t: result,
-        normal: primitive.normal,
-        hitPoint: vAdd(m4Multv3(primitive.mTransNoTranslate, hitPoint), position)
+    // Project 3D coordinates onto plane
+    if (primitive.texture) {
+        var mappingPoint = [
+            vDot(primitive.right, hitPoint),
+            vDot(primitive.away, hitPoint)
+        ];
+
+        return {
+            t: result,
+            normal: primitive.normal,
+            hitPoint: hitPoint,
+            mappingPoint: mappingPoint
+        }
+    }
+    else {
+        return {
+            t: result,
+            normal: primitive.normal,
+            hitPoint: hitPoint
+        }
     }
 }
+
+
 
 function intersectTriangle(primitive, cameraStart, cameraDir, cameraRayRatio, resultOnly, position) {
     // http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
@@ -191,7 +222,7 @@ function intersectBox(primitive, cameraStart, cameraDir, cameraRayRatio, resultO
 // This method always takes camera coordinates in world space, and returns
 // all values in world space as well.
 function intersect(primitive, position, ray, resultOnly) {
-    if (primitive.type === "triangle" || primitive.type === "boundingBox") {
+    if (primitive.type === "triangle" || primitive.type === "boundingBox" || primitive.type === "plane") {
         var cameraStart = position;
         var cameraDir = ray;
         var cameraRayRatio = 1;
@@ -290,10 +321,16 @@ function getColorForRay(cameraPosition, rayN, reflections) {
             zFar = hitPointToCameraDist;
             var ambientColor = vCompMultv(primitive.ambientColor, d.ambientIntensity);
 
-            color = ambientColor;
-
             var hasRefraction = false;
             var hasReflection = false;
+            var hasTexture = false;
+            if (primitive.texture && result.mappingPoint) {
+                var hasTexture = true;
+                var textureColor = vMult(getColorForTexture(textureData[primitive.texture], result.mappingPoint, primitive), 1/255);
+                ambientColor = vCompMultv(ambientColor, textureColor);
+            }
+            color = ambientColor;
+
             if (primitive.refraction && !vEq(primitive.refraction, [0, 0, 0]) && reflections <= maxReflections && ENABLE_REFRACTION) {
                 hasRefraction = true;
                 hasReflection = false;
@@ -375,12 +412,16 @@ function getColorForRay(cameraPosition, rayN, reflections) {
                     var specularFactor = Math.max(0.0, Math.pow(vDot(hitPointToLightR, hitPointToCameraN), 25));
                     var specularColor = vCompMultv(vMult(primitive.specularColor, specularFactor), light.specularIntensity);
                     //specularColor = [0, 0, 0];
-                    var surfaceColor = vAdd(diffuseColor, specularColor);
+                    var surfaceColor = vAdd3(color, diffuseColor, specularColor);
+                    
+                    if (hasTexture) {
+                        surfaceColor = vCompMultv(surfaceColor, textureColor)
+                    }
 
                     if (!hasReflection)
-                        color = vAdd(color, surfaceColor);
+                        color = surfaceColor;
                     else {
-                        color = vAdd3(color, reflectColor, vCompMultv(surfaceColor, primitive.reflectionInv));
+                        color = vAdd(vCompMultv(reflectColor, primitive.reflection), vCompMultv(surfaceColor, primitive.reflectionInv));
                     }
                     //color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
                     //if (Math.random() < 0.1 && primitive.id == "origin") console.log(lightToHitPointN);
@@ -436,5 +477,6 @@ onmessage = function(e) {
         max_y = e.data.max_y;
         width = e.data.width;
         height = e.data.height;
+        textureData = e.data.textureData;
     }
 }

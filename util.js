@@ -1,9 +1,11 @@
 e = 0.00000000001;
 
+flags = {};
+
 usePartitions = true;
-useWorkers = true;
-lineSkip = 5;
-numWorkers = 8;
+flags['USE_WORKERS'] = true;
+flags['WORKER_CHUNK_LINES'] = 5;
+flags['NUM_WORKERS'] = 8;
 postMessageCalls = 0;
 maxReflections = 10;
 

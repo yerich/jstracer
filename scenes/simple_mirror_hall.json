@@ -1,0 +1,97 @@
+{
+    "primitives": [
+        {
+            "type": "plane",
+            "id": "plane1",
+            "diffuseColor": [0, 156, 255],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [1, 1, 1]
+        }, {
+            "type": "plane",
+            "id": "planeback",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [0, 0, 0],
+            "reflection": [0.85, 0.9, 0.85]
+        }, {
+            "type": "plane",
+            "id": "planefront",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [0, 0, 0],
+            "reflection": [0.85, 0.9, 0.85]
+        }, {
+            "type": "sphere",
+            "id": "sphere1",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255]
+        }
+    ],
+    "lights": [
+        {
+            "center": [-10, 0, 1],
+            "diffuseIntensity": [0.5, 0.5, 0.5],
+            "specularIntensity": [0.5, 0.5, 0.5],
+            "falloff": [1, 0, 0]
+        },
+        {
+            "center": [0, 0, 5],
+            "diffuseIntensity": [0.2, 0.2, 0.2],
+            "specularIntensity": [0.2, 0.2, 0.2],
+            "falloff": [1, 0, 0]
+        }
+    ],
+    "transformations": [
+        {
+            "target": "plane1",
+            "type": "translate",
+            "amount": [0, -2, 0]
+        }, {
+            "target": "planeback",
+            "type": "rotate",
+            "amount": 90,
+            "axis": "x"
+        }, {
+            "target": "planeback",
+            "type": "translate",
+            "amount": [0, 0, -3]
+        }, {
+            "target": "planefront",
+            "type": "rotate",
+            "amount": 90,
+            "axis": "x"
+        }, {
+            "target": "planefront",
+            "type": "translate",
+            "amount": [0, 0, 6]
+        }, {
+            "target": "sphere1",
+            "type": "scale",
+            "amount": [1, 2, 1]
+        }, {
+            "target": "sphere1",
+            "type": "translate",
+            "amount": [2, 0, 0]
+        }, {
+            "target": "box1",
+            "type": "scale",
+            "amount": [1, 100, 1]
+        }, {
+            "target": "box1",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 45
+        }, {
+            "target": "box1",
+            "type": "translate",
+            "amount": [-2, 0, 0]
+        }
+    ],
+    "camera": {
+        "position": [0, 0, 5],
+        "direction": [0, 0, -1],
+        "up": [0, 1, 0]
+    },
+    "ambientIntensity": [0.1, 0.1, 0.1]
+}
