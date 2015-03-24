@@ -48,12 +48,30 @@ function intersectSphere(primitive, cameraStart, cameraDir, cameraRayRatio, invT
         var hitPoint = vAdd(centerDiff, vMult(cameraDir, result));
         var normal = vNormalize(m4Multv3(primitive.mTransRotateAndInvScale, hitPoint));
 
-        hitPoint = m4Multv3(primitive.mTrans, hitPoint);
+        var worldHitPoint = m4Multv3(primitive.mTrans, hitPoint);
 
-        return {
-            t: result / cameraRayRatio,
-            normal: normal,
-            hitPoint: hitPoint
+        // UV mapping for spheres
+        // http://en.wikipedia.org/wiki/UV_mapping
+        if (primitive.texture) {
+            var mappingCoord = m4Multv3(primitive.mTransNoTranslate, hitPoint);
+            var mappingPoint = [
+                Math.atan2(mappingCoord[2], mappingCoord[0]) / (Math.PI),
+                -Math.asin(mappingCoord[1]) / Math.PI * 2
+            ];
+
+            return {
+                t: result / cameraRayRatio,
+                normal: normal,
+                hitPoint: worldHitPoint,
+                mappingPoint: mappingPoint
+            }
+        }
+        else {
+            return {
+                t: result / cameraRayRatio,
+                normal: normal,
+                hitPoint: worldHitPoint
+            }
         }
     }
     return false;
@@ -207,6 +225,7 @@ function intersectBox(primitive, cameraStart, cameraDir, cameraRayRatio, resultO
         var worldHitPoint = m4Multv3(primitive.mTrans, hitPoint);
         normal = vNormalize(m4Multv3(primitive.mTransRotateAndInvScale, normal));
 
+        // Texture mapping
         if (primitive.texture) {
             var mappingCoord = m4Multv3(primitive.mTransScaleOnlyInv, hitPoint);
             if (hitPoint[0] > bounds[1][0] - e) {
@@ -339,6 +358,8 @@ function intersect(primitive, position, ray, resultOnly) {
     return false;
 }
 
+// Casts a ray towards a light source from a hitpoint, and looks for anything that blocks it.
+// Returns true if light ray is blocked, false otherwise.
 function checkLightRayForShadow(result, light, hitPointToLightN, hitPointToLightDist) {
     for (var i = 0; i < d.primitives.length; i++) {
         var primitive = d.primitives[i];
@@ -351,6 +372,8 @@ function checkLightRayForShadow(result, light, hitPointToLightN, hitPointToLight
     return false;
 }
 
+// Casts a ray from a camera position in a certain normalized direction, and gets the ultimate
+// color of the ray, accounting for reflections and refractions.
 function getColorForRay(cameraPosition, rayN, reflections) {
     var zFar = 10000000000000;
     var color = [0, 0, 0];
@@ -374,6 +397,7 @@ function getColorForRay(cameraPosition, rayN, reflections) {
             var hasReflection = false;
             var hasTexture = false;
 
+            // Check for texturing
             if (primitive.texture && result.mappingPoint) {
                 var hasTexture = true;
                 var textureColor = vMult(getColorForTexture(textureData[primitive.texture], result.mappingPoint, primitive), 1/255);
@@ -381,6 +405,7 @@ function getColorForRay(cameraPosition, rayN, reflections) {
             }
             color = [0, 0, 0];
 
+            // Account for refraction
             if (primitive.refraction && !vEq(primitive.refraction, [0, 0, 0]) && reflections <= maxReflections && ENABLE_REFRACTION) {
                 hasRefraction = true;
                 hasReflection = false;
@@ -437,7 +462,7 @@ function getColorForRay(cameraPosition, rayN, reflections) {
             }
 
             if (!hasReflection || !vEq(primitive.reflection, [1, 1, 1])) {
-
+                // Loop through lights to get the surface color contribution for each light source, unless the objective is completely reflective.
                 for (var j = 0; j < d.lights.length; j++) {
                     var light = d.lights[j];
 
@@ -491,6 +516,7 @@ function getColorForRay(cameraPosition, rayN, reflections) {
     return color;
 }
 
+// Webworker code
 onmessage = function(e) {
     if (e.data.action === "getPixel") {
         var color = getColorForRay(d.camera.position, e.data.ray, 0);

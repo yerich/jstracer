@@ -10,7 +10,10 @@
             "diffuseColor": [255, 233, 211],
             "specularColor": [255, 255, 255],
             "ambientColor": [255, 255, 255],
-            "reflection": [0.5, 0.5, 0.5]
+            "reflection": [0.5, 0.5, 0.5],
+            "texture": "test.png",
+            "textureMappedWidth": 0.5, 
+            "textureMappedHeight": 0.5
         }, {
             "type": "sphere",
             "id": "origin",
