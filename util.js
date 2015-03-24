@@ -6,6 +6,7 @@ usePartitions = true;
 flags['USE_WORKERS'] = true;
 flags['WORKER_CHUNK_LINES'] = 5;
 flags['NUM_WORKERS'] = 8;
+flags['PERLIN_SIZE'] = 50;
 postMessageCalls = 0;
 maxReflections = 10;
 

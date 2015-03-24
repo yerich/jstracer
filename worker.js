@@ -11,9 +11,51 @@ var findPrimitive = function(id) {
     }
 };
 
+// Use linear interpolation on perlin noise
+var getPerlin = function(mappingPoint, primitive, mode) {
+    mappingPoint[2] = mappingPoint[2] || 0;
+
+    var coords = [[], []];
+    var diff = [];
+    for (var i = 0; i < 3; i++) {
+        coords[0][i] = ((Math.floor(mappingPoint[i] * primitive.perlinTextureDimensions[i]) % flags['PERLIN_SIZE']) + flags['PERLIN_SIZE']) % flags['PERLIN_SIZE'];
+        diff[i] = (((mappingPoint[i] * primitive.perlinTextureDimensions[i]) % flags['PERLIN_SIZE']) + flags['PERLIN_SIZE']) % flags['PERLIN_SIZE'] - (coords[0][i]);
+        coords[1][i] = (coords[0][i] + 1) % flags['PERLIN_SIZE'];
+    }
+
+    if (mode === "blackAndWhite") {
+        var sum = 0;
+        for (var x = 0; x < 2; x++) {
+            for (var y = 0; y < 2; y++) {
+                for (var z = 0; z < 2; z++) {
+                    sum += d.perlin[coords[x][0]][coords[y][1]][coords[z][2]][0] * (x === 1 ? diff[0] : 1 - diff[0]) * (y === 1 ? diff[1] : 1 - diff[1]) * (z === 1 ? diff[2] : 1 - diff[2]);
+                }
+            }
+        }
+
+        return [sum, sum, sum];
+    }
+    else {
+        var sum = [0, 0, 0];
+        for (var i = 0; i < 3; i++) {
+            for (var x = 0; x < 2; x++) {
+                for (var y = 0; y < 2; y++) {
+                    for (var z = 0; z < 2; z++) {
+                        sum[i] += d.perlin[coords[x][0]][coords[y][1]][coords[z][2]][i] * (x === 1 ? diff[0] : 1 - diff[0]) * (y === 1 ? diff[1] : 1 - diff[1]) * (z === 1 ? diff[2] : 1 - diff[2]);
+                    }
+                }
+            }
+        }
+
+        return sum;
+    }
+}
+
+
+
 var getColorForTexture = function(textureData, mappingPoint, primitive) {
-    var x = (((Math.floor(mappingPoint[0] * primitive.textureWidthFactor)) % textureData.width) + textureData.width) % textureData.width;
-    var y = (((Math.floor(mappingPoint[1] * primitive.textureHeightFactor)) % textureData.height) + textureData.height) % textureData.height;
+    var x = ((Math.floor(mappingPoint[0] * primitive.textureWidthFactor) % textureData.width) + textureData.width) % textureData.width;
+    var y = ((Math.floor(mappingPoint[1] * primitive.textureHeightFactor) % textureData.height) + textureData.height) % textureData.height;
 
     var offset = (y * textureData.width + x) * 4;
     return [
@@ -52,7 +94,7 @@ function intersectSphere(primitive, cameraStart, cameraDir, cameraRayRatio, invT
 
         // UV mapping for spheres
         // http://en.wikipedia.org/wiki/UV_mapping
-        if (primitive.texture) {
+        if (primitive.requiresMapping) {
             var mappingCoord = m4Multv3(primitive.mTransNoTranslate, hitPoint);
             var mappingPoint = [
                 Math.atan2(mappingCoord[2], mappingCoord[0]) / (Math.PI),
@@ -92,7 +134,7 @@ function intersectPlane(primitive, cameraStart, cameraDir, cameraRayRatio, resul
     hitPoint = vAdd(m4Multv3(primitive.mTransNoTranslate, hitPoint), position);
 
     // Project 3D coordinates onto plane
-    if (primitive.texture) {
+    if (primitive.requiresMapping) {
         var mappingPoint = [
             vDot(primitive.right, hitPoint),
             vDot(primitive.away, hitPoint)
@@ -226,7 +268,7 @@ function intersectBox(primitive, cameraStart, cameraDir, cameraRayRatio, resultO
         normal = vNormalize(m4Multv3(primitive.mTransRotateAndInvScale, normal));
 
         // Texture mapping
-        if (primitive.texture) {
+        if (primitive.requiresMapping) {
             var mappingCoord = m4Multv3(primitive.mTransScaleOnlyInv, hitPoint);
             if (hitPoint[0] > bounds[1][0] - e) {
                 var right = [0, 1, 0];
@@ -399,8 +441,13 @@ function getColorForRay(cameraPosition, rayN, reflections) {
 
             // Check for texturing
             if (primitive.texture && result.mappingPoint) {
-                var hasTexture = true;
+                hasTexture = true;
                 var textureColor = vMult(getColorForTexture(textureData[primitive.texture], result.mappingPoint, primitive), 1/255);
+                ambientColor = vCompMultv(ambientColor, textureColor);
+            }
+            else if (primitive.perlinTexture && result.mappingPoint) {
+                hasTexture = true;
+                var textureColor = getPerlin(result.mappingPoint, primitive, primitive.perlinTextureMode);
                 ambientColor = vCompMultv(ambientColor, textureColor);
             }
             color = [0, 0, 0];
@@ -490,7 +537,7 @@ function getColorForRay(cameraPosition, rayN, reflections) {
                     var specularColor = vCompMultv(vMult(primitive.specularColor, specularFactor), light.specularIntensity);
                     //specularColor = [0, 0, 0];
                     var surfaceColor = vAdd(diffuseColor, specularColor);
-                    
+
                     if (hasTexture) {
                         surfaceColor = vCompMultv(surfaceColor, textureColor)
                     }

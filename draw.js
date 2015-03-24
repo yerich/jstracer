@@ -234,6 +234,9 @@ function drawImage(data) {
                 primitive.mTransScaleOnly = m4();
             }
 
+            //set to true if we need to return the hit point in model coordinates when intersecting
+            primitive.requiresMapping = false;  
+
             // Some texture processing to get height/width factors
             if (primitive.texture) {
                 if (!primitive.textureMappedWidth)
@@ -244,7 +247,12 @@ function drawImage(data) {
                 var texture = textureData[primitive.texture];
                 primitive.textureWidthFactor = texture.width / primitive.textureMappedWidth;
                 primitive.textureHeightFactor = texture.height / primitive.textureMappedHeight;
-
+                primitive.requiresMapping = true;
+            }
+            if (primitive.perlinTexture) {
+                if (!primitive.perlinTextureDimensions)
+                    primitive.perlinTextureDimensions = [10, 10, 10]
+                primitive.requiresMapping = true;
             }
 
             primitive.mTransScaleOnlyInv = m4Inverse(primitive.mTransScaleOnly);
@@ -397,9 +405,27 @@ function drawImage(data) {
         }
     }
 
+    // Generates a cached hash table of Perlin noise dot grid gradient values
+    var generatePerlin = function() {
+        d.perlin = [];
+        for (var x = 0; x < flags['PERLIN_SIZE']; x++) {
+            d.perlin[x] = [];
+            for (var y = 0; y < flags['PERLIN_SIZE']; y++) {
+                d.perlin[x][y] = [];
+                for (var z = 0; z < flags['PERLIN_SIZE']; z++) {
+                    d.perlin[x][y][z] = [Math.random(), Math.random(), Math.random()];
+                    while (d.perlin[x][y][z] > 1) {
+                        d.perlin[x][y][z] = [Math.random(), Math.random(), Math.random()];
+                    }
+                }
+            }
+        }
+    }
+
     var doRender = function() {
         if (modelsLoaded && texturesLoaded) {
             preprocessPrimitives(d.primitives, d.transformations);
+            generatePerlin();
             writePixels();
         }
     }
@@ -435,7 +461,6 @@ function drawImage(data) {
                 for (var i in images) {
                     var image = images[i];
                     
-
                     var canvas = document.createElement('canvas');
                     canvas.width = image.width;
                     canvas.height = image.height;
@@ -444,11 +469,14 @@ function drawImage(data) {
                     context.drawImage(image, 0, 0);
 
                     var url = d.textures[i].url;
-                    window.textureData[url] = d.textures[i];
+                    window.textureData[url] = {};
+                    window.textureData[url].url = d.textures[i].url;
                     window.textureData[url].width = image.width;
                     window.textureData[url].height = image.height;
                     window.textureData[url].data = context.getImageData(0, 0, image.width, image.height).data;
                     console.log("Texture loaded:" + url);
+
+                    delete d.textures[i].data;
                 };
 
                 texturesLoaded = true;
