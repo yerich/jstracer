@@ -22,6 +22,7 @@ function drawImage(data) {
         primitive.mTransNoScale = m4();
         primitive.mTransRotateAndInvScale = m4();
         primitive.mTransNoTranslate = m4();
+        primitive.mTransScaleOnly = m4();
     }
 
     var makeUniformModelGrid = function(model) {
@@ -163,6 +164,7 @@ function drawImage(data) {
                 primitive.mTrans = mScale(t.amount[0], t.amount[1], t.amount[2], primitive.mTrans);
                 primitive.mTransNoTranslate = mScale(t.amount[0], t.amount[1], t.amount[2], primitive.mTransNoTranslate);
                 primitive.mTransRotateAndInvScale = mScale(1/t.amount[0], 1/t.amount[1], 1/t.amount[2], primitive.mTransRotateAndInvScale);
+                primitive.mTransScaleOnly = mScale(1/t.amount[0], 1/t.amount[1], 1/t.amount[2], primitive.mTransScaleOnly);
             }
             else if (t.type === "rotate") {
                 primitive.mTrans = mRotate(t.axis, t.amount, primitive.mTrans);
@@ -229,6 +231,7 @@ function drawImage(data) {
                 primitive.mTransNoTranslate = m4();
                 primitive.mTransNoScale = m4();
                 primitive.mTransRotateAndInvScale = m4();
+                primitive.mTransScaleOnly = m4();
             }
 
             // Some texture processing to get height/width factors
@@ -243,6 +246,8 @@ function drawImage(data) {
                 primitive.textureHeightFactor = texture.height / primitive.textureMappedHeight;
 
             }
+
+            primitive.mTransScaleOnlyInv = m4Inverse(primitive.mTransScaleOnly);
         }
     };
 
@@ -459,7 +464,7 @@ function drawImage(data) {
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/model_many_refract.json", function(d) {
+    $.getJSON("scenes/simple_textured.json", function(d) {
         window.d = drawImage(d);
     });
 });

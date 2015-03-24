@@ -32,7 +32,7 @@
             "diffuseColor": [255, 255, 255],
             "specularColor": [0, 0, 0],
             "ambientColor": [0, 0, 0],
-            "reflection": [0.5, 0.5, 0.5]
+            "reflection": [0.9, 0.9, 0.9]
         }, {
             "type": "plane",
             "id": "planefront",
@@ -42,9 +42,12 @@
         }, {
             "type": "box",
             "id": "box1",
-            "diffuseColor": [0, 167, 0],
-            "specularColor": [0, 167, 0],
-            "ambientColor": [0, 167, 0]
+            "diffuseColor": [167, 167, 167],
+            "specularColor": [167, 167, 167],
+            "ambientColor": [167, 167, 167],
+            "texture": "test.png",
+            "textureMappedWidth": 0.5, 
+            "textureMappedHeight": 0.5
         }, {
             "type": "box",
             "id": "box2",
@@ -104,7 +107,7 @@
         }, {
             "target": "sphere1",
             "type": "translate",
-            "amount": [2.5, 2.5, 0]
+            "amount": [2.5, 2.5, 1]
         }, {
             "target": "origin",
             "type": "scale",
@@ -117,7 +120,7 @@
         }, {
             "target": "box1",
             "type": "scale",
-            "amount": [1, 1.4, 1.2]
+            "amount": [1, 2.4, 1.2]
         }, {
             "target": "box1",
             "type": "rotate",
