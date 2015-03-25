@@ -4,9 +4,13 @@ flags = {};
 
 usePartitions = true;
 flags['USE_WORKERS'] = true;
-flags['WORKER_CHUNK_LINES'] = 5;
+flags['WORKER_CHUNK_PIXELS'] = 10000;
+flags['WORKER_AA_CHUNK_PIXELS'] = 825;
 flags['NUM_WORKERS'] = 8;
 flags['PERLIN_SIZE'] = 50;
+flags["MULTISAMPLING"] = true;
+flags["MULTISAMPLING_THRESHOLD"] = 50;
+flags["MULTISAMPLING_AMOUNT"] = 16;
 postMessageCalls = 0;
 maxReflections = 10;
 
@@ -362,3 +366,48 @@ mTransNoScaleInv = function(primitive) {
     }
     return primitive.mTransNoScaleInv;
 };
+
+getMultiSampleRays = function(camera, x, y, width, height, max_x, max_y) {
+    var rays = [];
+    // random variance for multisampling
+    rv = function() {
+        return 1/4 + ((Math.random() - 0.5) / 3);
+    }
+
+    rdv = function() {
+        return (Math.random() - 0.5) / 4;
+    }
+    if (flags["MULTISAMPLING_AMOUNT"] === 16) {
+        for (var dx = 0; dx < 4; dx++) {
+            for (var dy = 0; dy < 4; dy++) {
+                newDir = vAdd(
+                    vMult(camera.up, -((y - 3/8 + (dy*1/4) + rdv()) / height * max_y) + (max_y/2)), 
+                    vMult(camera.right, (x - (dx*1/4) + rdv()) / width * max_x - (max_x/2)));
+                rays.push(vNormalize(vAdd(camera.direction, newDir)));
+            }
+        }
+    }
+    else {
+        newDir = vAdd(
+            vMult(camera.up, -((y-rv()) / height * max_y) + (max_y/2)), 
+            vMult(camera.right, (x-rv()) / width * max_x - (max_x/2)));
+        rays[0] = vNormalize(vAdd(camera.direction, newDir));
+
+        newDir = vAdd(
+            vMult(camera.up, -((y+rv()) / height * max_y) + (max_y/2)), 
+            vMult(camera.right, (x-rv()) / width * max_x - (max_x/2)));
+        rays[1] = vNormalize(vAdd(camera.direction, newDir));
+
+        newDir = vAdd(
+            vMult(camera.up, -((y-rv()) / height * max_y) + (max_y/2)), 
+            vMult(camera.right, (x+rv()) / width * max_x - (max_x/2)));
+        rays[2] = vNormalize(vAdd(camera.direction, newDir));
+
+        newDir = vAdd(
+            vMult(camera.up, -((y+rv()) / height * max_y) + (max_y/2)), 
+            vMult(camera.right, (x+rv()) / width * max_x - (max_x/2)));
+        rays[3] = vNormalize(vAdd(camera.direction, newDir));
+    }
+
+    return rays;
+}

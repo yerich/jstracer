@@ -1,0 +1,56 @@
+{
+    "textures": [
+        {"url": "test.png"}
+    ],
+    "primitives": [
+        {
+            "type": "box",
+            "id": "box3",
+            "diffuseColor": [0, 255, 167],
+            "specularColor": [0, 255, 167],
+            "ambientColor": [0, 255, 167]
+        }
+    ],
+    "lights": [
+        {
+            "center": [0, -2.5, 0],
+            "diffuseIntensity": [0.5, 0.5, 0.5],
+            "specularIntensity": [0.5, 0.5, 0.5],
+            "falloff": [1, 0, 0]
+        },
+        {
+            "center": [-4, 4, 5],
+            "diffuseIntensity": [0.5, 0.5, 0.5],
+            "specularIntensity": [0.5, 0.5, 0.5],
+            "falloff": [1, 0, 0]
+        }
+    ],
+    "transformations": [
+        {
+            "target": "box3",
+            "type": "scale",
+            "amount": [1, 4, 3]
+        }, {
+            "target": "box3",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 75
+        }, {
+            "target": "box3",
+            "type": "rotate",
+            "axis": "x",
+            "amount": 60
+        }, {
+            "target": "box3",
+            "type": "rotate",
+            "axis": "z",
+            "amount": 10
+        }
+    ],
+    "camera": {
+        "position": [0, 0, 7],
+        "direction": [0, 0, -1],
+        "up": [0, 1, 0]
+    },
+    "ambientIntensity": [0.1, 0.1, 0.1]
+}

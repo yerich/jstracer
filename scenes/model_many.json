@@ -15,7 +15,7 @@
             "id": "planeback",
             "diffuseColor": [0, 156, 255],
             "specularColor": [0, 0, 0],
-            "ambientColor": [0, 0, 0],
+            "ambientColor": [0, 0, 0]
         }, {
             "type": "model",
             "id": "model1",

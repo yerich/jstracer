@@ -51,8 +51,7 @@ var getPerlin = function(mappingPoint, primitive, mode) {
     }
 }
 
-
-
+// Get a pixel's texture color (not interpolated)
 var getColorForTexture = function(textureData, mappingPoint, primitive) {
     var x = ((Math.floor(mappingPoint[0] * primitive.textureWidthFactor) % textureData.width) + textureData.width) % textureData.width;
     var y = ((Math.floor(mappingPoint[1] * primitive.textureHeightFactor) % textureData.height) + textureData.height) % textureData.height;
@@ -311,7 +310,7 @@ function intersectBox(primitive, cameraStart, cameraDir, cameraRayRatio, resultO
         return {
             t: result / cameraRayRatio,
             normal: normal,
-            hitPoint: hitPoint
+            hitPoint: worldHitPoint
         }
     }
     else {
@@ -548,9 +547,10 @@ function getColorForRay(cameraPosition, rayN, reflections) {
                         color = vAdd(color, vCompMultv(surfaceColor, primitive.reflectionInv));
                     }
                     //color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
-                    //if (Math.random() < 0.1 && primitive.id == "origin") console.log(lightToHitPointN);
-                    //if (primitive.id == "model1") 
+                    //if (primitive.id == "box3") {
                     //    color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
+                    //    break;
+                    //}
                 }
             }
             else {
@@ -573,7 +573,7 @@ onmessage = function(e) {
             y: e.data.y
         });
     }
-    if (e.data.action === "getPixels") {
+    else if (e.data.action === "getPixels") {
         var data = [];
         var rays = [];
         for (var y = e.data.y1; y < e.data.y2; y++) {
@@ -593,6 +593,30 @@ onmessage = function(e) {
         }
         postMessage({
             action: "getPixels",
+            pixels: data
+        });
+    }
+    else if (e.data.action === "getAntialiasedPixels") {
+        var coords = e.data.coords;
+        var data = [];
+        for (var i in coords) {
+            var x = coords[i][0];
+            var y = coords[i][1];
+
+            var rays = getMultiSampleRays(d.camera, x, y, width, height, max_x, max_y);
+            var color = [0, 0, 0];
+            for (var i = 0; i < rays.length; i++) {
+                color = vAdd(color, vMult(getColorForRay(d.camera.position, rays[i], 0), 1/flags["MULTISAMPLING_AMOUNT"]));
+            }
+            data.push({
+                x: x,
+                y: y,
+                color: color
+            });
+        }
+
+        postMessage({
+            action: "getAntialiasedPixels",
             pixels: data
         });
     }

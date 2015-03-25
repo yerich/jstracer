@@ -9,7 +9,10 @@ function drawImage(data) {
     var canvasData = ctx.getImageData(0, 0, width, height);
     var d = data;
     var renderStart;
-    var renderEnd;
+    var renderEnd = false;
+    var workers = [];
+    var workerOutstandingMessages = [];
+    var perlinNeeded = false;
 
     var findPrimitive = function(primitives, id) {
         for (var i in primitives) {
@@ -253,6 +256,7 @@ function drawImage(data) {
                 if (!primitive.perlinTextureDimensions)
                     primitive.perlinTextureDimensions = [10, 10, 10]
                 primitive.requiresMapping = true;
+                perlinNeeded = true;
             }
 
             primitive.mTransScaleOnlyInv = m4Inverse(primitive.mTransScaleOnly);
@@ -312,6 +316,91 @@ function drawImage(data) {
         renderEnd = +new Date();
     }
 
+    function getEdges() {
+        var pixelDiff = [];
+        for (var y = 0; y < height; y++) {
+            pixelDiff[y] = [];
+            for (var x = 0; x < width; x++) {
+                var index = (x + y * width) * 4;
+                pixelDiff[y][x] = 0;
+
+                for (var i = 0; i < 3; i++) {
+                    if (x < width - 1)
+                        pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index + 4 + i]);
+                    if (x > 0)
+                        pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index - 4 + i]);
+                    if (y < height - 1)
+                        pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index + (4 * height) + i]);
+                    if (y > 0)
+                        pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index - (4 * height) + i]);
+                }
+            }
+        }
+
+        d.pixelDiff = pixelDiff;
+    }
+
+    // Returns an event handler for a rendering worker
+    var workerMessageHandler = function(workerNum) {
+        var lineSkip = Math.round(flags['WORKER_CHUNK_PIXELS'] / width);;
+        return function(e) {
+            var i = workerNum;
+            workerOutstandingMessages[i]--;
+            checkWorkerTimers(workerOutstandingMessages);
+            updateTimer();
+
+            if (e.data.action === "getPixels") {
+                for (var p in e.data.pixels) {
+                    var pixel = e.data.pixels[p];
+                    writePixel(pixel.x, pixel.y, pixel.color[0], pixel.color[1], pixel.color[2], 255);
+                }
+
+                if (e.data.pixels[0].y % lineSkip == 0 || e.data.pixels[0].y > height - 1 - (flags['NUM_WORKERS'] * lineSkip))
+                    updateCanvas();
+
+                if (renderEnd) {
+                    if (flags["MULTISAMPLING"]) {
+                        getEdges();
+                        var aaPixels = [];
+                        // Get which pixels need to be anti-aliased
+                        for (var y = 0; y < height; y++) {
+                            for (var x = 0; x < width; x++) {
+                                if (d.pixelDiff[y][x] > flags["MULTISAMPLING_THRESHOLD"]) {
+                                    aaPixels.push([x, y]);
+                                    writePixel(x, y, 255, 255, 255, 255);
+                                }
+                            }
+                        }
+                        updateCanvas();
+
+                        // divide target pixels into chunks which get sent as messages to workers.
+                        messages = [];
+                        for (var i = 0, count = 0; i < aaPixels.length; i += flags['WORKER_AA_CHUNK_PIXELS'], count++) {
+                            messages[count] = {
+                                action: "getAntialiasedPixels",
+                                coords: aaPixels.slice(i, i + flags['WORKER_AA_CHUNK_PIXELS'])
+                            }
+                        }
+
+                        for (var i in messages) {
+                            var w = i % 4;
+                            workerOutstandingMessages[w]++;
+                            workers[w].postMessage(messages[i]);
+                        }
+                    }
+                }
+            }
+            else if (e.data.action === "getAntialiasedPixels") {
+                for (var i in e.data.pixels) {
+                    var pixel = e.data.pixels[i];
+                    writePixel(pixel.x, pixel.y, pixel.color[0], pixel.color[1], pixel.color[2], 255);
+                }
+                updateCanvas();
+            }
+        };
+    }
+
+    // Generates an image of the scene defined by d, and writes it to the target canvas
     function writePixels() {
         clearCanvas();
 
@@ -319,34 +408,18 @@ function drawImage(data) {
         var fov = 40;
         var max_x = Math.tan(degToRad(fov));
         var max_y = max_x / aspectRatio;
+        d.camera.right = vNormalize(vCross3(d.camera.direction, d.camera.up));
         renderStart = +new Date();
         console.log("max_x is " + max_x + ". max_y is " + max_y);
 
         if (flags['USE_WORKERS']) {
-            var workers = [];
-            var lineSkip = flags['WORKER_CHUNK_LINES'];
-            var workerOutstandingMessages = [];
+            var lineSkip = Math.round(flags['WORKER_CHUNK_PIXELS'] / width);
+            
             for (var i = 0; i < flags['NUM_WORKERS']; i++) {
                 workers[i] = new Worker("worker.js");
                 workerOutstandingMessages[i] = 0;
                 workers[i].postMessage({action: "setD", d: JSON.stringify(d), max_x: max_x, max_y : max_y, width: width, height: height, textureData: textureData});
-                (function() { 
-                    workers[i].onmessage = function(e) {
-                        workerOutstandingMessages[i]--;
-                        if (e.data.action === "getPixels") {
-                            for (var p in e.data.pixels) {
-                                var pixel = e.data.pixels[p];
-                                writePixel(pixel.x, pixel.y, pixel.color[0], pixel.color[1], pixel.color[2], 255);
-                            }
-
-                            if (e.data.pixels[0].y % lineSkip == 0 || e.data.pixels[0].y > height - 1 - (flags['NUM_WORKERS'] * lineSkip))
-                                updateCanvas();
-                        }
-
-                        checkWorkerTimers(workerOutstandingMessages);
-                        updateTimer();
-                    };
-                })(i);
+                workers[i].onmessage = workerMessageHandler(i);
             }
 
             for (var y = 0; y < height; y += lineSkip) {
@@ -363,11 +436,39 @@ function drawImage(data) {
 
             for (var y = 0; y < height; y++) {
                 for (var x = 0; x < width; x++) {
-                    var ray = vNormalize(vAdd(d.camera.direction, [x / width * max_x - (max_x/2), -(y / height * max_y) + (max_y/2), 0]));
+                    var newDir = vAdd(
+                        vMult(d.camera.up, -(y / height * max_y) + (max_y/2)), 
+                        vMult(d.camera.right, x / width * max_x - (max_x/2)));
+
+                    var ray = vNormalize(vAdd(d.camera.direction, newDir));
                     var color = getColorForRay(d.camera.position, ray, 0);
                     writePixel(x, y, color[0], color[1], color[2], 255);
                 }
             }
+
+            if (flags["MULTISAMPLING"]) {
+                getEdges();
+                for (var y = 0; y < height; y++) {
+                    for (var x = 0; x < width; x++) {
+                        if (d.pixelDiff[y][x] > flags["MULTISAMPLING_THRESHOLD"]) {
+                            // multisampling
+                            var color = [0, 0, 0];
+                            var ray, newDir;
+
+                            var rays = getMultiSampleRays(d.camera, x, y, width, height, max_x, max_y);
+                            for (var i = 0; i < rays.length; i++) {
+                                color = vAdd(color, vMult(getColorForRay(d.camera.position, rays[i], 0), 1/flags["MULTISAMPLING_AMOUNT"]));
+                            }
+
+                            writePixel(x, y, color[0], color[1], color[2], 255);
+                        }
+                        //var ray = vNormalize(vAdd(d.camera.direction, [x / width * max_x - (max_x/2), -(y / height * max_y) + (max_y/2), 0]));
+                        //var color = getColorForRay(d.camera.position, ray, 0);
+                        //writePixel(x, y, color[0], color[1], color[2], 255);
+                    }
+                }
+            }
+            updateCanvas();
 
             renderEnd = +new Date();
             updateTimer();
@@ -414,7 +515,7 @@ function drawImage(data) {
                 d.perlin[x][y] = [];
                 for (var z = 0; z < flags['PERLIN_SIZE']; z++) {
                     d.perlin[x][y][z] = [Math.random(), Math.random(), Math.random()];
-                    while (d.perlin[x][y][z] > 1) {
+                    while (vLen(d.perlin[x][y][z]) > 1) {
                         d.perlin[x][y][z] = [Math.random(), Math.random(), Math.random()];
                     }
                 }
@@ -422,10 +523,13 @@ function drawImage(data) {
         }
     }
 
+    // Function that calls render (and does some preparation stuff) only when models and textures loaded
     var doRender = function() {
         if (modelsLoaded && texturesLoaded) {
             preprocessPrimitives(d.primitives, d.transformations);
-            generatePerlin();
+            if (perlinNeeded)
+                generatePerlin();
+
             writePixels();
         }
     }
@@ -492,7 +596,7 @@ function drawImage(data) {
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/simple_textured.json", function(d) {
+    $.getJSON("scenes/model_many.json", function(d) {
         window.d = drawImage(d);
     });
 });
