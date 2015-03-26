@@ -118,11 +118,23 @@ function intersectTriangle(primitive, cameraStart, cameraDir, cameraRayRatio, re
         if (resultOnly) return result / cameraRayRatio;
         var hitPoint = vMult(cameraDir, result);
 
-        return {
-            t: result / cameraRayRatio,
-            normal: primitive.normal,
-            hitPoint: vAdd(m4Multv3(primitive.mTransNoTranslate, hitPoint), position)
-        };
+        // Project 3D coordinates onto plane
+        if (primitive.requiresMapping) {
+            if (Math.random() < 0.01) console.log("test");
+            return {
+                t: result / cameraRayRatio,
+                normal: primitive.normal,
+                mappingPoint: hitPoint,
+                hitPoint: vAdd(m4Multv3(primitive.mTransNoTranslate, hitPoint), position)
+            };
+        }
+        else {
+            return {
+                t: result / cameraRayRatio,
+                normal: primitive.normal,
+                hitPoint: vAdd(m4Multv3(primitive.mTransNoTranslate, hitPoint), position)
+            };
+        }
     }
     return false;
 }

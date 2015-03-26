@@ -116,6 +116,28 @@ function drawImage(data) {
                 primitive.refractionInv = vSub([1, 1, 1], primitive.refraction);
             }
 
+            //set to true if we need to return the hit point in model coordinates when intersecting
+            primitive.requiresMapping = false;  
+
+            // Some texture processing to get height/width factors
+            if (primitive.texture) {
+                if (!primitive.textureMappedWidth)
+                    primitive.textureMappedWidth = 1;
+                if (!primitive.textureMappedHeight)
+                    primitive.textureMappedHeight = 1;
+
+                var texture = textureData[primitive.texture];
+                primitive.textureWidthFactor = texture.width / primitive.textureMappedWidth;
+                primitive.textureHeightFactor = texture.height / primitive.textureMappedHeight;
+                primitive.requiresMapping = true;
+            }
+            if (primitive.perlinTexture) {
+                if (!primitive.perlinTextureDimensions)
+                    primitive.perlinTextureDimensions = [10, 10, 10]
+                primitive.requiresMapping = true;
+                perlinNeeded = true;
+            }
+
             if (primitive.type === "sphere" && !primitive.radius) {
                 primitive.radius = 1;
                 primitive.center = [0, 0, 0];
@@ -206,7 +228,11 @@ function drawImage(data) {
                         mTrans: primitive.mTrans,
                         mTransNoScale: primitive.mTransNoScale,
                         mTransNoTranslate: primitive.mTransNoTranslate,
-                        mTransRotateAndInvScale: primitive.mTransRotateAndInvScale
+                        mTransRotateAndInvScale: primitive.mTransRotateAndInvScale,
+                        requiresMapping: primitive.requiresMapping,
+                        perlinTexture: primitive.perlinTexture,
+                        perlinTextureDimensions: primitive.perlinTextureDimensions,
+                        perlinTextureMode: primitive.perlinTextureMode
                     };
                 }
 
@@ -235,28 +261,6 @@ function drawImage(data) {
                 primitive.mTransNoScale = m4();
                 primitive.mTransRotateAndInvScale = m4();
                 primitive.mTransScaleOnly = m4();
-            }
-
-            //set to true if we need to return the hit point in model coordinates when intersecting
-            primitive.requiresMapping = false;  
-
-            // Some texture processing to get height/width factors
-            if (primitive.texture) {
-                if (!primitive.textureMappedWidth)
-                    primitive.textureMappedWidth = 1;
-                if (!primitive.textureMappedHeight)
-                    primitive.textureMappedHeight = 1;
-
-                var texture = textureData[primitive.texture];
-                primitive.textureWidthFactor = texture.width / primitive.textureMappedWidth;
-                primitive.textureHeightFactor = texture.height / primitive.textureMappedHeight;
-                primitive.requiresMapping = true;
-            }
-            if (primitive.perlinTexture) {
-                if (!primitive.perlinTextureDimensions)
-                    primitive.perlinTextureDimensions = [10, 10, 10]
-                primitive.requiresMapping = true;
-                perlinNeeded = true;
             }
 
             primitive.mTransScaleOnlyInv = m4Inverse(primitive.mTransScaleOnly);
@@ -605,6 +609,7 @@ function drawImage(data) {
                     while (vLen(d.perlin[x][y][z]) > 1) {
                         d.perlin[x][y][z] = [Math.random(), Math.random(), Math.random()];
                     }
+                    d.perlin[x][y][z] = vNormalize(d.perlin[x][y][z]);
                 }
             }
         }
@@ -688,7 +693,7 @@ function drawImage(data) {
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/model_many_soft_shadows.json", function(d) {
+    $.getJSON("scenes/model_perlin_textured.json", function(d) {
         window.d = drawImage(d);
     });
 });
