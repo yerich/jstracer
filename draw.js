@@ -116,7 +116,7 @@ function drawImage(data) {
                 primitive.refractionInv = vSub([1, 1, 1], primitive.refraction);
             }
 
-            if (primitive.type === "sphere") {
+            if (primitive.type === "sphere" && !primitive.radius) {
                 primitive.radius = 1;
                 primitive.center = [0, 0, 0];
             }
@@ -333,6 +333,82 @@ function drawImage(data) {
                         pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index + (4 * height) + i]);
                     if (y > 0)
                         pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index - (4 * height) + i]);
+
+                    // With soft shadows on, we must be more sensitive in our edge detection algorithm
+                    if (flags["SOFT_SHADOWS"]) {
+                        if (x < width - 1 && y < height - 1)
+                            pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index + (4 * height) + 4 + i]) / 2;
+                        if (x < width - 1 && y > 0)
+                            pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index - (4 * height) + 4 + i]) / 2;
+                        if (x > 0 && y < height - 1)
+                            pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index + (4 * height) - 4 + i]) / 2;
+                        if (x > 0 && y > 0)
+                            pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index - (4 * height) - 4 + i]) / 2;
+
+                        if (x < width - 2)
+                            pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index + 8 + i]) / 2;
+                        if (x > 1)
+                            pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index - 8 + i]) / 2;
+                        if (y < height - 2)
+                            pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index + (8 * height) + i]) / 2;
+                        if (y > 1)
+                            pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index - (8 * height) + i]) / 2;
+                    }
+                }
+            }
+        }
+
+        if (flags["SOFT_SHADOWS"]) {
+            var origPixelDiff = [];
+            for (var y = 0; y < height; y++) {
+                origPixelDiff[y] = [];
+                for (var x = 0; x < width; x++) {
+                    origPixelDiff[y][x] = pixelDiff[y][x];
+                }
+            }
+
+            // Smooth out pixelDiff
+            for (var y = 0; y < height; y++) {
+                for (var x = 0; x < width; x++) {
+                    if (pixelDiff[y][x] < flags["MULTISAMPLING_THRESHOLD"]) {
+                        if (x < width - 1) pixelDiff[y][x+1] += origPixelDiff[y][x] / 2;
+                        if (x > 0) pixelDiff[y][x-1] += origPixelDiff[y][x] / 2;
+                        if (y < height - 1) pixelDiff[y+1][x] += origPixelDiff[y][x] / 2;
+                        if (y > 0) pixelDiff[y-1][x] += origPixelDiff[y][x] / 2;
+                        if (x < width - 1 && y < height - 1) pixelDiff[y+1][x+1] += origPixelDiff[y][x] / 4;
+                        if (x < width - 1 && y > 0) pixelDiff[y-1][x+1] += origPixelDiff[y][x] / 4;
+                        if (x > 0 && y < height - 1) pixelDiff[y+1][x-1] += origPixelDiff[y][x] / 4;
+                        if (x > 0 && y > 0) pixelDiff[y-1][x-1] += origPixelDiff[y][x] / 4;
+                        if (x < width - 2) pixelDiff[y][x+2] += origPixelDiff[y][x] / 4;
+                        if (x > 2) pixelDiff[y][x-2] += origPixelDiff[y][x] / 4;
+                        if (y < height - 2) pixelDiff[y+2][x] += origPixelDiff[y][x] / 4;
+                        if (y > 2)  pixelDiff[y-2][x] += origPixelDiff[y][x] / 4;
+                    }
+                }
+            }
+
+            for (var y = 0; y < height; y++) {
+                origPixelDiff[y] = [];
+                for (var x = 0; x < width; x++) {
+                    origPixelDiff[y][x] = pixelDiff[y][x];
+                }
+            }
+
+            // Fill in pixelDiff holes
+            for (var y = 0; y < height; y++) {
+                for (var x = 0; x < width; x++) {
+                    if (pixelDiff[y][x] < flags["MULTISAMPLING_THRESHOLD"]) {
+                        var flipThreshold = 4;
+                        var thresholdNeighbours = 0
+                        if (x < width - 1 && origPixelDiff[y][x+1] > flags["MULTISAMPLING_THRESHOLD"]) thresholdNeighbours++;
+                        if (x > 0 && origPixelDiff[y][x-1] > flags["MULTISAMPLING_THRESHOLD"]) thresholdNeighbours++;
+                        if (y < height - 1 && origPixelDiff[y+1][x] > flags["MULTISAMPLING_THRESHOLD"]) thresholdNeighbours++;
+                        if (y > 0 && origPixelDiff[y-1][x] > flags["MULTISAMPLING_THRESHOLD"]) thresholdNeighbours++;
+
+                        if (thresholdNeighbours >= flipThreshold) {
+                            pixelDiff[y][x] += flags["MULTISAMPLING_THRESHOLD"];
+                        }
+                    }
                 }
             }
         }
@@ -367,7 +443,8 @@ function drawImage(data) {
                             for (var x = 0; x < width; x++) {
                                 if (d.pixelDiff[y][x] > flags["MULTISAMPLING_THRESHOLD"]) {
                                     aaPixels.push([x, y]);
-                                    writePixel(x, y, 255, 255, 255, 255);
+                                    if (flags["MULTISAMPLING_ADAPTIVE_HIGHLIGHT"])
+                                        writePixel(x, y, 255, 255, 255, 255);
                                 }
                             }
                         }
@@ -388,6 +465,8 @@ function drawImage(data) {
                             workers[w].postMessage(messages[i]);
                         }
                     }
+
+                    renderEnd = 0;
                 }
             }
             else if (e.data.action === "getAntialiasedPixels") {
@@ -409,19 +488,25 @@ function drawImage(data) {
         var max_x = Math.tan(degToRad(fov));
         var max_y = max_x / aspectRatio;
         d.camera.right = vNormalize(vCross3(d.camera.direction, d.camera.up));
+        // Start render timer
         renderStart = +new Date();
         console.log("max_x is " + max_x + ". max_y is " + max_y);
 
         if (flags['USE_WORKERS']) {
+            // Multi-threaded renderer -- render using WebWorkers API
             var lineSkip = Math.round(flags['WORKER_CHUNK_PIXELS'] / width);
             
             for (var i = 0; i < flags['NUM_WORKERS']; i++) {
-                workers[i] = new Worker("worker.js");
+                if (!workers[i])
+                    workers[i] = new Worker("worker.js");
+
                 workerOutstandingMessages[i] = 0;
+                // Send message to worker telling them the scene, textures, other parameters
                 workers[i].postMessage({action: "setD", d: JSON.stringify(d), max_x: max_x, max_y : max_y, width: width, height: height, textureData: textureData});
                 workers[i].onmessage = workerMessageHandler(i);
             }
 
+            // Allocate lines for each worker to render
             for (var y = 0; y < height; y += lineSkip) {
                 var rays = [];
                 var workerNum = (y / lineSkip) % flags['NUM_WORKERS']
@@ -432,6 +517,7 @@ function drawImage(data) {
             }
         }
         else {
+            // Single threaded renderer -- rendering on main thread
             window.d = d;
 
             for (var y = 0; y < height; y++) {
@@ -446,6 +532,7 @@ function drawImage(data) {
                 }
             }
 
+
             if (flags["MULTISAMPLING"]) {
                 getEdges();
                 for (var y = 0; y < height; y++) {
@@ -455,7 +542,7 @@ function drawImage(data) {
                             var color = [0, 0, 0];
                             var ray, newDir;
 
-                            var rays = getMultiSampleRays(d.camera, x, y, width, height, max_x, max_y);
+                            var rays = getMultiSampleRays(d.camera, x, y, width, height, max_x, max_y, flags["MULTISAMPLING_AMOUNT"]);
                             for (var i = 0; i < rays.length; i++) {
                                 color = vAdd(color, vMult(getColorForRay(d.camera.position, rays[i], 0), 1/flags["MULTISAMPLING_AMOUNT"]));
                             }
@@ -527,6 +614,11 @@ function drawImage(data) {
     var doRender = function() {
         if (modelsLoaded && texturesLoaded) {
             preprocessPrimitives(d.primitives, d.transformations);
+
+            for (var i in d.lights) {
+                if (!d.lights[i].radius) d.lights[i].radius = 0;
+            }
+
             if (perlinNeeded)
                 generatePerlin();
 
@@ -596,7 +688,7 @@ function drawImage(data) {
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/model_many.json", function(d) {
+    $.getJSON("scenes/model_many_soft_shadows.json", function(d) {
         window.d = drawImage(d);
     });
 });
