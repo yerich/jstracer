@@ -197,7 +197,7 @@ function getColorForRay(cameraPosition, rayN, reflections, shadowSamples) {
                         }
                     }
                     else {  // soft shadows. perturb the light source.
-                        shadowSamples = shadowSamples || 4;
+                        shadowSamples = shadowSamples || 32;
 
                         var shadowFactor = 0;
 
@@ -214,6 +214,24 @@ function getColorForRay(cameraPosition, rayN, reflections, shadowSamples) {
 
                             if (!checkLightRayForShadow(result, light, lr_hitPointToLightN, lr_hitPointToLightDist))
                                 shadowFactor++;
+                        }
+
+                        if (shadowFactor !== 0 && shadowFactor !== shadowSamples) {
+                            for (var lr = 0; lr < shadowSamples * 7; lr ++) {
+                                do {
+                                    var perturbation = [(Math.random() - 0.5) * light.radius + (light.radius / 2 * (lr % 2 == 0 ? 1 : -1)), 
+                                        (Math.random() - 0.5) * light.radius + (light.radius / 2 * (lr % 4 == 0 ? 1 : -1)), 
+                                        (Math.random() - 0.5) * light.radius + (light.radius / 2 * (lr % 8 == 0 ? 1 : -1))];
+                                } while (vLen(perturbation) > light.radius);
+
+                                var lr_hitPointToLight = v3Sub(vAdd(light.center, perturbation), result.hitPoint);
+                                var lr_hitPointToLightN = vNormalize(lr_hitPointToLight);
+                                var lr_hitPointToLightDist = vLen(lr_hitPointToLight);
+
+                                if (!checkLightRayForShadow(result, light, lr_hitPointToLightN, lr_hitPointToLightDist))
+                                    shadowFactor++;
+                            }
+                            shadowSamples *= 8
                         }
 
                         if (shadowFactor === 0)

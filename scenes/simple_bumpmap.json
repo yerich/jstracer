@@ -84,7 +84,8 @@
             "center": [4, 4, 5],
             "diffuseIntensity": [0.5, 0.5, 0.5],
             "specularIntensity": [0.5, 0.5, 0.5],
-            "falloff": [1, 0, 0]
+            "falloff": [1, 0, 0],
+            "radius": 0.5
         }
     ],
     "transformations": [

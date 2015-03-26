@@ -16,7 +16,7 @@ flags["MULTISAMPLING_THRESHOLD"] = 100;
 flags["MULTISAMPLING_AMOUNT"] = 16;
 flags["MULTISAMPLING_ADAPTIVE_HIGHLIGHT"] = true;
 flags["SOFT_SHADOWS"] = true;
-flags["SOFT_SHADOWS_ALIASED_COUNT"] = 24;
+flags["SOFT_SHADOWS_ALIASED_COUNT"] = 16;
 postMessageCalls = 0;
 maxReflections = 10;
 

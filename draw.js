@@ -352,7 +352,7 @@ function drawImage(data) {
                         pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index - (4 * height) + i]);
 
                     // With soft shadows on, we must be more sensitive in our edge detection algorithm
-                    if (flags["SOFT_SHADOWS"]) {
+                    if (flags["SOFT_SHADOWS"] && false) {
                         if (x < width - 1 && y < height - 1)
                             pixelDiff[y][x] += Math.abs(canvasData.data[index + i] - canvasData.data[index + (4 * height) + 4 + i]) / 2;
                         if (x < width - 1 && y > 0)
@@ -375,7 +375,7 @@ function drawImage(data) {
             }
         }
 
-        if (flags["SOFT_SHADOWS"]) {
+        if (flags["SOFT_SHADOWS"] && false) {
             var origPixelDiff = [];
             for (var y = 0; y < height; y++) {
                 origPixelDiff[y] = [];
@@ -756,7 +756,7 @@ function drawImage(data) {
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/simple_bumpmap.json", function(d) {
+    $.getJSON("scenes/simple_soft_shadow.json", function(d) {
         window.d = drawImage(d);
     });
 });
