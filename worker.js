@@ -64,6 +64,13 @@ var getColorForTexture = function(textureData, mappingPoint, primitive) {
     ];
 }
 
+// Get a pixel's bump map value
+var getValueFromBumpMap = function(bumpMap, mappingPoint, primitive) {
+    var x = ((Math.floor(mappingPoint[0] * primitive.bumpMapWidthFactor) % bumpMap.width) + bumpMap.width) % bumpMap.width;
+    var y = ((Math.floor(mappingPoint[1] * primitive.bumpMapHeightFactor) % bumpMap.height) + bumpMap.height) % bumpMap.height;
+    return bumpMap.data[y][x];
+}
+
 // Casts a ray towards a light source from a hitpoint, and looks for anything that blocks it.
 // Returns true if light ray is blocked, false otherwise.
 function checkLightRayForShadow(result, light, hitPointToLightN, hitPointToLightDist) {
@@ -115,6 +122,16 @@ function getColorForRay(cameraPosition, rayN, reflections, shadowSamples) {
                 ambientColor = vCompMultv(ambientColor, textureColor);
             }
             color = [0, 0, 0];
+
+            // Perturb the normal if a bump map is specified
+            if (primitive.bumpMap && flags["BUMP_MAPPING"]) {
+                var uv = getUVForNormal(result.normal);
+                var normalDiff = getValueFromBumpMap(normalMapData[primitive.bumpMap], result.mappingPoint, primitive);
+                result.normal = vNormalize(vAdd3(result.normal, vMult(uv.u, normalDiff[0] * primitive.bumpFactor), vMult(uv.v, normalDiff[1] * primitive.bumpFactor)));
+
+                //color = [(normalDiff[0] + 1) * 128, (normalDiff[0] + 1) * 128, (normalDiff[0] + 1) * 128];
+                //break;
+            }
 
             // Account for refraction
             if (primitive.refraction && !vEq(primitive.refraction, [0, 0, 0]) && reflections <= maxReflections && ENABLE_REFRACTION) {
@@ -311,5 +328,6 @@ onmessage = function(e) {
         width = e.data.width;
         height = e.data.height;
         textureData = e.data.textureData;
+        normalMapData = e.data.normalMapData;
     }
 }

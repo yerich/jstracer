@@ -28,7 +28,7 @@ function intersectSphere(primitive, cameraStart, cameraDir, cameraRayRatio, invT
         // UV mapping for spheres
         // http://en.wikipedia.org/wiki/UV_mapping
         if (primitive.requiresMapping) {
-            var mappingCoord = m4Multv3(primitive.mTransNoTranslate, hitPoint);
+            var mappingCoord = m4Multv3(primitive.mTransNoTranslateInv, hitPoint);
             var mappingPoint = [
                 Math.atan2(mappingCoord[2], mappingCoord[0]) / (Math.PI),
                 -Math.asin(mappingCoord[1]) / Math.PI * 2
@@ -343,4 +343,37 @@ function intersect(primitive, position, ray, resultOnly) {
     }
 
     return false;
+}
+
+function heightMapToNormals(heightmap) {
+    var normalMap = [];
+    for (var y = 1; y < heightmap.length - 1; y++) {
+        normalMap[y] = [];
+        for (x = 1; x < heightmap[y].length - 1; x++) {
+            normalMap[y][x] = [(heightmap[y][x-1] - heightmap[y][x+1]) / 255,
+                               (heightmap[y-1][x] - heightmap[y+1][x]) / 255];
+        }
+        normalMap[y][0] = normalMap[y][1];
+        normalMap[y][heightmap[y].length - 1] = normalMap[y][heightmap[y].length - 2];
+    }
+    normalMap[0] = normalMap[1];
+    normalMap[heightmap[y].length - 1] = normalMap[heightmap[y].length - 2];
+    return normalMap;
+}
+
+function getUVForNormal(normal) {
+    // http://www.ozone3d.net/tutorials/mesh_deformer_p2.php#tangent_space
+    var c1 = vCross3(normal, [0, 0, 1]);
+    var c2 = vCross3(normal, [0, 1, 0]);
+
+    if (vLen(c1) > vLen(c2))
+        var tangent = c1;
+    else
+        var tangent = c2;
+
+    tangent = vNormalize(tangent);
+    return {
+        u: tangent,
+        v: vNormalize(vCross3(normal, tangent))
+    }
 }

@@ -1,4 +1,5 @@
 textureData = {};
+normalMapData = {};
 
 function drawImage(data) {
     var c = document.getElementById("render");
@@ -136,6 +137,18 @@ function drawImage(data) {
                     primitive.perlinTextureDimensions = [10, 10, 10]
                 primitive.requiresMapping = true;
                 perlinNeeded = true;
+            }
+            if (primitive.bumpMap && flags["BUMP_MAPPING"]) {
+                primitive.requiresMapping = true;
+
+                if (!primitive.bumpMapMappedWidth)
+                    primitive.bumpMapMappedWidth = 1;
+                if (!primitive.bumpMapMappedHeight)
+                    primitive.bumpMapMappedHeight = 1;
+
+                var bumpMap = normalMapData[primitive.bumpMap];
+                primitive.bumpMapWidthFactor = bumpMap.width / primitive.bumpMapMappedWidth;
+                primitive.bumpMapHeightFactor = bumpMap.height / primitive.bumpMapMappedHeight;
             }
 
             if (primitive.type === "sphere" && !primitive.radius) {
@@ -506,7 +519,7 @@ function drawImage(data) {
 
                 workerOutstandingMessages[i] = 0;
                 // Send message to worker telling them the scene, textures, other parameters
-                workers[i].postMessage({action: "setD", d: JSON.stringify(d), max_x: max_x, max_y : max_y, width: width, height: height, textureData: textureData});
+                workers[i].postMessage({action: "setD", d: JSON.stringify(d), max_x: max_x, max_y : max_y, width: width, height: height, textureData: textureData, normalMapData: normalMapData});
                 workers[i].onmessage = workerMessageHandler(i);
             }
 
@@ -572,7 +585,7 @@ function drawImage(data) {
     // http://webglfundamentals.org/webgl/lessons/webgl-2-textures.html
     var loadImage = function(url, callback) {
         var image = new Image();
-        image.src = "textures/"+url;
+        image.src = url;
         image.onload = callback;
         return image;
     }
@@ -617,7 +630,7 @@ function drawImage(data) {
 
     // Function that calls render (and does some preparation stuff) only when models and textures loaded
     var doRender = function() {
-        if (modelsLoaded && texturesLoaded) {
+        if (modelsLoaded && texturesLoaded && heightmapsLoaded) {
             preprocessPrimitives(d.primitives, d.transformations);
 
             for (var i in d.lights) {
@@ -635,7 +648,8 @@ function drawImage(data) {
     // If this scene requires additional files, load them
     var modelsLoaded = true;
     var texturesLoaded = true;
-    if (d.models || d.textures) {
+    var heightmapsLoaded = true;
+    if (d.models || d.textures || d.heightmaps) {
         if (d.models) {
             var modelsLoaded = false;
             d.modelData = {};
@@ -656,7 +670,7 @@ function drawImage(data) {
 
         if (d.textures) {
             var texturesLoaded = false;
-            loadTextures(d.textures.map(function(t) { return t.url; }), function(images) {
+            loadTextures(d.textures.map(function(t) { return "textures/" + t.url; }), function(images) {
                 window.textureData = {};
 
                 for (var i in images) {
@@ -675,7 +689,7 @@ function drawImage(data) {
                     window.textureData[url].width = image.width;
                     window.textureData[url].height = image.height;
                     window.textureData[url].data = context.getImageData(0, 0, image.width, image.height).data;
-                    console.log("Texture loaded:" + url);
+                    console.log("Texture loaded: " + url);
 
                     delete d.textures[i].data;
                 };
@@ -684,16 +698,65 @@ function drawImage(data) {
                 doRender();
             });
         }
+
+        if (d.heightmaps && flags["BUMP_MAPPING"]) {
+            var heightmapsLoaded = false;
+            loadTextures(d.heightmaps.map(function(t) { return "heightmaps/" + t.url; }), function(images) {
+                window.normalMapData = {};
+
+                for (var i in images) {
+                    var image = images[i];
+                    
+                    var canvas = document.createElement('canvas');
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+
+                    var context = canvas.getContext('2d');
+                    context.drawImage(image, 0, 0);
+
+                    var url = d.heightmaps[i].url;
+                    window.normalMapData[url] = {};
+                    window.normalMapData[url].url = d.heightmaps[i].url;
+                    window.normalMapData[url].width = image.width;
+                    window.normalMapData[url].height = image.height;
+                    
+                    var heightmapImageData = context.getImageData(0, 0, image.width, image.height).data;
+                    var heightmapData = [];
+                    for (var y = 0; y < window.normalMapData[url].height; y++) {
+                        heightmapData[y] = [];
+                        for (var x = 0; x < window.normalMapData[url].width; x++) {
+                            var index = (y * window.normalMapData[url].width + x) * 4;
+                            heightmapData[y][x] = heightmapImageData[index];
+                        }
+                    }
+
+                    window.normalMapData[url].data = heightMapToNormals(heightmapData);
+
+                    //for (var y = 0; y < image.height; y++) {
+                    //    for (var x = 0; x < image.width; x++) {
+                    //        writePixel(x, y, (normalMapData[url].data[y][x][0] + 1) * 128, (normalMapData[url].data[y][x][0] + 1) * 128, (normalMapData[url].data[y][x][0] + 1) * 128, 255);
+                    //    }
+                    //}
+                    console.log("Heightmap loaded: " + url);
+                    //updateCanvas();
+
+                    delete d.heightmaps[i].data;
+                };
+
+                heightmapsLoaded = true;
+                doRender();
+            });
+        }
     }
     else {
-        doRender()
+        doRender();
     }
 
     return d;
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/model_perlin_textured.json", function(d) {
+    $.getJSON("scenes/simple_bumpmap.json", function(d) {
         window.d = drawImage(d);
     });
 });

@@ -7,7 +7,10 @@ flags['USE_WORKERS'] = true;
 flags['WORKER_CHUNK_PIXELS'] = 1000;
 flags['WORKER_AA_CHUNK_PIXELS'] = 22;
 flags['NUM_WORKERS'] = 8;
+
+flags["BUMP_MAPPING"] = true;
 flags['PERLIN_SIZE'] = 50;
+
 flags["MULTISAMPLING"] = true;
 flags["MULTISAMPLING_THRESHOLD"] = 100;
 flags["MULTISAMPLING_AMOUNT"] = 16;
