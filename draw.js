@@ -30,7 +30,10 @@ function drawImage(data) {
     }
 
     var makeUniformModelGrid = function(model) {
-        model.gridCount = Math.min(2, Math.round(Math.pow(model.triangles.length / 50, 1/3)));
+        if (flags['UNIFORM_GRID_PARTITIONING'])
+            model.gridCount = Math.min(20, Math.round(Math.pow(model.triangles.length / 50, 1/3)));
+        else if (flags["OCTRESS"])
+            model.gridCount = Math.min(2, Math.round(Math.pow(model.triangles.length / 50, 1/3)));
         
         if (model.gridCount <= 1)
             return;
@@ -89,7 +92,7 @@ function drawImage(data) {
 
                     if (partition.triangles.length > 0) {
                         model.partitions.push(partition);
-                        if (partition.triangles.length < model.triangles.length - 5)
+                        if (partition.triangles.length < model.triangles.length - 5 && flags["OCTRESS"])
                             makeUniformModelGrid(partition);
                     }
                     else 
@@ -263,7 +266,8 @@ function drawImage(data) {
                     }
                 }
 
-                makeUniformModelGrid(primitive);
+                if (flags['OCTREES'] || flags['UNIFORM_GRID_PARTITIONING'])
+                    makeUniformModelGrid(primitive);
             }
 
             // The primitive's corrdinates have been coverted to world space, so there's no future

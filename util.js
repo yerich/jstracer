@@ -2,7 +2,7 @@ e = 0.00000000001;
 
 flags = {};
 
-usePartitions = true;
+flags['OCTREES'] = true;
 flags['USE_WORKERS'] = true;
 flags['WORKER_CHUNK_PIXELS'] = 1000;
 flags['WORKER_AA_CHUNK_PIXELS'] = 22;
