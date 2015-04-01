@@ -642,7 +642,7 @@
         {
             "target": "pawn_b_4",
             "type": "translate",
-            "amount": [-4.93, 0, -5.98]
+            "amount": [4.93, 0, -5.98]
         },
         {
             "target": "pawn_b_5",
