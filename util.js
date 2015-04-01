@@ -4,25 +4,25 @@ flags = {};
 
 flags['OCTREES'] = true;
 flags['USE_WORKERS'] = true;
-flags['WORKER_CHUNK_PIXELS'] = 1000;
+flags['WORKER_CHUNK_PIXELS'] = 512;
 flags['WORKER_AA_CHUNK_PIXELS'] = 22;
-flags['NUM_WORKERS'] = 8;
+flags['NUM_WORKERS'] = 4;
 
 flags["BUMP_MAPPING"] = true;
-flags['PERLIN_SIZE'] = 50;
+flags['PERLIN_SIZE'] = 70;
 
 flags["MULTISAMPLING"] = true;
 flags["MULTISAMPLING_THRESHOLD"] = 100;
 flags["MULTISAMPLING_AMOUNT"] = 16;
-flags["MULTISAMPLING_ADAPTIVE_HIGHLIGHT"] = true;
+flags["MULTISAMPLING_ADAPTIVE_HIGHLIGHT"] = false;
 flags["SOFT_SHADOWS"] = true;
-flags["SOFT_SHADOWS_ALIASED_COUNT"] = 16;
-postMessageCalls = 0;
-maxReflections = 10;
+flags["SOFT_SHADOWS_COUNT"] = 16;
+flags["SOFT_SHADOWS_ALIASED_COUNT"] = 8;
 
-ENABLE_REFLECTION = true;
-ENABLE_REFRACTION = true;
-ENABLE_DITHERING = true;
+flags["REFLECTION"] = true;
+flags["REFRACTION"] = true;
+flags["MAX_REFLECTIONS"] = 10;
+flags["DITHERING"] = true;
 
 log = function(m, r, reset) {
     if (!r) return console.log(m);

@@ -1,0 +1,742 @@
+{
+    "models": [
+        "pawn.raw",
+        "knight.raw",
+        "king.raw",
+        "bishop.raw",
+        "queen.raw",
+        "rook.raw"
+    ],
+    "textures": [
+        {"url": "chessboard_l.jpg"},
+        {"url": "bricks.png"}
+    ],
+    "heightmaps": [
+        {"url": "stripe.png"}
+    ],
+    "primitives": [
+        {
+            "type": "plane",
+            "id": "plane1",
+            "diffuseColor": [240, 220, 185],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [255, 255, 255]
+        }, 
+        {
+            "type": "plane",
+            "id": "planetop",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [255, 255, 255]
+        }, {
+            "type": "plane",
+            "id": "planeback",
+            "diffuseColor": [125, 125, 125],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [0, 0, 0],
+            "texture": "bricks.png",
+            "textureMappedWidth": 15, 
+            "textureMappedHeight": 15
+        }, {
+            "type": "plane",
+            "id": "planefront",
+            "diffuseColor": [125, 125, 125],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [0, 0, 0],
+            "texture": "bricks.png",
+            "textureMappedWidth": 15, 
+            "textureMappedHeight": 15
+        }, {
+            "type": "plane",
+            "id": "planeright",
+            "diffuseColor": [125, 125, 125],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [0, 0, 0],
+            "texture": "bricks.png",
+            "textureMappedWidth": 15, 
+            "textureMappedHeight": 15
+        }, {
+            "type": "box",
+            "id": "table",
+            "diffuseColor": [240, 220, 185],
+            "specularColor": [167, 167, 167],
+            "ambientColor": [240, 220, 185],
+            "bumpMap": "stripe.png",
+            "bumpFactor": 2,
+            "bumpMapMappedWidth": 1, 
+            "bumpMapMappedHeight": 1
+        },
+        {
+            "type": "box",
+            "id": "board2",
+            "diffuseColor": [222, 171, 116],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [222, 171, 116],
+            "perlinTexture": [0.2, 0.2, 0.2],
+            "perlinTextureDimensions": [1, 1, 1],
+            "perlinTextureMode": "wood"
+        },
+        {
+            "type": "box",
+            "id": "board3",
+            "diffuseColor": [0, 0, 0],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [0, 0, 0]
+        },
+        {
+            "type": "box",
+            "id": "board",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "texture": "chessboard_l.jpg",
+            "textureMappedWidth": 6, 
+            "textureMappedHeight": 6
+        },
+        {
+            "type": "model",
+            "id": "pawn_w_1",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "pawn_w_2",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "pawn_w_3",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "pawn_w_4",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "pawn_w_5",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "pawn_w_6",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "pawn_w_7",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "pawn_w_8",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "knight_w_1",
+            "modelFile": "knight.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "knight_w_2",
+            "modelFile": "knight.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "king_w",
+            "modelFile": "king.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "bishop_w_1",
+            "modelFile": "bishop.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "bishop_w_2",
+            "modelFile": "bishop.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "rook_w_1",
+            "modelFile": "rook.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "rook_w_2",
+            "modelFile": "rook.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+        {
+            "type": "model",
+            "id": "queen_w",
+            "modelFile": "queen.raw",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255],
+            "refraction": [0.95, 0.95, 0.95],
+            "refractionIndex": 1.33
+        },
+
+
+
+        {
+            "type": "model",
+            "id": "pawn_b_1",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [0, 0, 0],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [0, 0, 0],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "pawn_b_2",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "pawn_b_3",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "pawn_b_4",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "pawn_b_5",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "pawn_b_6",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "pawn_b_7",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "pawn_b_8",
+            "modelFile": "pawn.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "knight_b_1",
+            "modelFile": "knight.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "knight_b_2",
+            "modelFile": "knight.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "bishop_b_1",
+            "modelFile": "bishop.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "bishop_b_2",
+            "modelFile": "bishop.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "rook_b_1",
+            "modelFile": "rook.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "rook_b_2",
+            "modelFile": "rook.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "king_b",
+            "modelFile": "king.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        },
+        {
+            "type": "model",
+            "id": "queen_b",
+            "modelFile": "queen.raw",
+            "diffuseColor": [55, 55, 55],
+            "specularColor": [188, 188, 188],
+            "ambientColor": [55, 55, 55],
+            "reflection": [0.6, 0.6, 0.6]
+        }
+    ],
+    "lights": [
+        {
+            "center": [0, 20, 0],
+            "diffuseIntensity": [0.25, 0.25, 0.25],
+            "specularIntensity": [0.25, 0.25, 0.25],
+            "falloff": [1, 0.0002, 0.0002]
+        },
+        {
+            "center": [-20, 20, 20],
+            "diffuseIntensity": [0.5, 0.5, 0.5],
+            "specularIntensity": [0.5, 0.5, 0.5],
+            "falloff": [1, 0.0002, 0.0002],
+            "radius": 4
+        },
+        {
+            "center": [20, 20, 0],
+            "diffuseIntensity": [0.3, 0.3, 0.3],
+            "specularIntensity": [0.3, 0.3, 0.3],
+            "falloff": [1, 0.0002, 0.0002]
+        }
+    ],
+    "transformations": [
+        {
+            "target": "plane1",
+            "type": "translate",
+            "amount": [0, -10, 0]
+        },
+        {
+            "target": "planetop",
+            "type": "translate",
+            "amount": [0, 50, 0]
+        }, {
+            "target": "planeback",
+            "type": "rotate",
+            "amount": 90,
+            "axis": "x"
+        }, {
+            "target": "planeback",
+            "type": "translate",
+            "amount": [0, 0, -60]
+        }, {
+            "target": "planefront",
+            "type": "rotate",
+            "amount": 90,
+            "axis": "x"
+        }, {
+            "target": "planefront",
+            "type": "translate",
+            "amount": [0, 0, 60]
+        }, {
+            "target": "planeright",
+            "type": "rotate",
+            "amount": 90,
+            "axis": "x"
+        }, {
+            "target": "planeright",
+            "type": "rotate",
+            "amount": 90,
+            "axis": "y"
+        }, {
+            "target": "planeright",
+            "type": "translate",
+            "amount": [40, 0, 0]
+        },
+
+        {
+            "target": "table",
+            "type": "scale",
+            "amount": [13, 0.2, 13]
+        },
+        {
+            "target": "table",
+            "type": "translate",
+            "amount": [3.5, -0.4, -3.5]
+        },
+        {
+            "target": "board",
+            "type": "scale",
+            "amount": [8, 0.01, 8]
+        },
+        {
+            "target": "board",
+            "type": "translate",
+            "amount": [3.5, -0, -3.5]
+        },
+        {
+            "target": "board2",
+            "type": "scale",
+            "amount": [9, 0.4, 9]
+        },
+        {
+            "target": "board2",
+            "type": "translate",
+            "amount": [3.5, -0.201, -3.5]
+        },
+        {
+            "target": "board3",
+            "type": "scale",
+            "amount": [8.05, 0.01, 8.05]
+        },
+        {
+            "target": "board3",
+            "type": "translate",
+            "amount": [3.5, -0.0005, -3.5]
+        },
+
+        {
+            "target": "knight_w_1",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 156
+        },
+        {
+            "target": "knight_w_2",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 12
+        },
+        {
+            "target": "knight_b_1",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 226
+        },
+        {
+            "target": "knight_b_2",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 93
+        },
+        {
+            "target": "rook_w_1",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 126
+        },
+        {
+            "target": "rook_w_2",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 164
+        },
+        {
+            "target": "rook_b_1",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 17
+        },
+        {
+            "target": "rook_b_2",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 306
+        },
+        {
+            "target": "king_w",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 67
+        },
+        {
+            "target": "king_b",
+            "type": "rotate",
+            "axis": "y",
+            "amount": 92
+        },
+
+        {
+            "target": "pawn_w_1",
+            "type": "translate",
+            "amount": [0.05, 0, -1.04]
+        },
+        {
+            "target": "pawn_w_2",
+            "type": "translate",
+            "amount": [2.03, 0, -0.97]
+        },
+        {
+            "target": "pawn_w_3",
+            "type": "translate",
+            "amount": [2.98, 0, -2.01]
+        },
+        {
+            "target": "pawn_w_4",
+            "type": "translate",
+            "amount": [4, 0, -4.02]
+        },
+        {
+            "target": "pawn_w_5",
+            "type": "translate",
+            "amount": [5.98, 0, -3.03]
+        },
+        {
+            "target": "pawn_w_6",
+            "type": "translate",
+            "amount": [6.96, 0, -3.92]
+        },
+        {
+            "target": "knight_w_1",
+            "type": "translate",
+            "amount": [3.01, 0, -3.96]
+        },
+        {
+            "target": "knight_w_2",
+            "type": "translate",
+            "amount": [6.03, 0, -6.02]
+        },
+        {
+            "target": "king_w",
+            "type": "translate",
+            "amount": [4.01, 0, -1.03]
+        },
+        {
+            "target": "bishop_w_1",
+            "type": "translate",
+            "amount": [3.02, 0, -4.98]
+        },
+        {
+            "target": "queen_w",
+            "type": "translate",
+            "amount": [5.02, 0, -4.93]
+        },
+
+        {
+            "target": "pawn_b_1",
+            "type": "translate",
+            "amount": [0.02, 0, -5.98]
+        },
+        {
+            "target": "pawn_b_2",
+            "type": "translate",
+            "amount": [1.05, 0, -4.03]
+        },
+        {
+            "target": "pawn_b_3",
+            "type": "translate",
+            "amount": [3, 0, -6.02]
+        },
+        {
+            "target": "pawn_b_4",
+            "type": "translate",
+            "amount": [-4.93, 0, -5.98]
+        },
+        {
+            "target": "pawn_b_5",
+            "type": "translate",
+            "amount": [6.96, 0, -6.01]
+        },
+        {
+            "target": "knight_b_1",
+            "type": "translate",
+            "amount": [6.02, 0, -7.04]
+        },
+        {
+            "target": "knight_b_2",
+            "type": "translate",
+            "amount": [0, 0, -5]
+        },
+        {
+            "target": "bishop_b_1",
+            "type": "translate",
+            "amount": [2, 0, -7.1]
+        },
+        {
+            "target": "bishop_b_2",
+            "type": "translate",
+            "amount": [5.92, 0, -0.02]
+        },
+        {
+            "target": "rook_b_1",
+            "type": "translate",
+            "amount": [0, 0, -6.9]
+        },
+        {
+            "target": "rook_b_2",
+            "type": "translate",
+            "amount": [7.02, 0, -6.04]
+        },
+        {
+            "target": "queen_b",
+            "type": "translate",
+            "amount": [0.02, 0, 0.05]
+        },
+        {
+            "target": "king_b",
+            "type": "translate",
+            "amount": [3.1, 0, -6.94]
+        },
+
+
+
+        {
+            "target": "bishop_w_2",
+            "type": "translate",
+            "amount": [8.85, -0.3, -5.4]
+        },
+        {
+            "target": "pawn_w_7",
+            "type": "translate",
+            "amount": [9.02, -0.3, -8.37]
+        },
+        {
+            "target": "pawn_w_8",
+            "type": "translate",
+            "amount": [9.09, -0.3, -7]
+        },
+        {
+            "target": "rook_w_1",
+            "type": "translate",
+            "amount": [8.92, -0.3, -7.62]
+        },
+        {
+            "target": "rook_w_2",
+            "type": "translate",
+            "amount": [9.13, -0.3, -6.25]
+        },
+        {
+            "target": "pawn_b_6",
+            "type": "translate",
+            "amount": [9.1, -0.3, -4]
+        },
+        {
+            "target": "pawn_b_7",
+            "type": "translate",
+            "amount": [9.04, -0.3, -3.4]
+        },
+        {
+            "target": "pawn_b_8",
+            "type": "translate",
+            "amount": [8.9, -0.3, -2.78]
+        }
+    ],
+    "camera": {
+        "position": [-2, 12, 15],
+        "direction": [0.4, -0.75, -1.2],
+        "up": [0, 1, 0]
+    },
+    "ambientIntensity": [0.1, 0.1, 0.1]
+}

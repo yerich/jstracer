@@ -32,7 +32,7 @@ function drawImage(data) {
     var makeUniformModelGrid = function(model) {
         if (flags['UNIFORM_GRID_PARTITIONING'])
             model.gridCount = Math.min(20, Math.round(Math.pow(model.triangles.length / 50, 1/3)));
-        else if (flags["OCTRESS"])
+        else if (flags['OCTREES'])
             model.gridCount = Math.min(2, Math.round(Math.pow(model.triangles.length / 50, 1/3)));
         
         if (model.gridCount <= 1)
@@ -92,7 +92,7 @@ function drawImage(data) {
 
                     if (partition.triangles.length > 0) {
                         model.partitions.push(partition);
-                        if (partition.triangles.length < model.triangles.length - 5 && flags["OCTRESS"])
+                        if (partition.triangles.length < model.triangles.length - 5)
                             makeUniformModelGrid(partition);
                     }
                     else 
@@ -181,9 +181,9 @@ function drawImage(data) {
                     for (var j = 0; j < triangles.length; j++) triangles[j] = parseFloat(triangles[j]);
                     for (var j = 0; j < triangles.length; j += 9) {
                         if (typeof triangles[j] === "undefined") continue;
-                        primitive.triangles.push([[triangles[j], triangles[j+1], triangles[j+2]], 
-                                                   [triangles[j+3], triangles[j+4], triangles[j+5]],
-                                                   [triangles[j+6], triangles[j+7], triangles[j+8]]]);
+                        primitive.triangles.push([[triangles[j], triangles[j+2], -triangles[j+1]], 
+                                                   [triangles[j+3], triangles[j+5], -triangles[j+4]],
+                                                   [triangles[j+6], triangles[j+8], -triangles[j+7]]]);
                     }
 
                     primitive.triangleRawString = "";
@@ -288,7 +288,7 @@ function drawImage(data) {
         var index = (x + y * width) * 4;
 
         // Random dithering
-        if (ENABLE_DITHERING) {
+        if (flags["DITHERING"]) {
             for (var i = 0; i < 3; i++) {
                 canvasData.data[index + 0] = Math.floor(r) + (Math.random() < (r - Math.floor(r)));
                 canvasData.data[index + 1] = Math.floor(g) + (Math.random() < (g - Math.floor(g)));
@@ -481,7 +481,7 @@ function drawImage(data) {
                         }
 
                         for (var i in messages) {
-                            var w = i % 4;
+                            var w = i % flags['NUM_WORKERS'];
                             workerOutstandingMessages[w]++;
                             workers[w].postMessage(messages[i]);
                         }
@@ -511,11 +511,12 @@ function drawImage(data) {
         d.camera.right = vNormalize(vCross3(d.camera.direction, d.camera.up));
         // Start render timer
         renderStart = +new Date();
-        console.log("max_x is " + max_x + ". max_y is " + max_y);
+        //console.log("max_x is " + max_x + ". max_y is " + max_y);
 
         if (flags['USE_WORKERS']) {
             // Multi-threaded renderer -- render using WebWorkers API
             var lineSkip = Math.round(flags['WORKER_CHUNK_PIXELS'] / width);
+            var message = {action: "setD", d: JSON.stringify(d), max_x: max_x, max_y : max_y, width: width, height: height, textureData: textureData, normalMapData: normalMapData};
             
             for (var i = 0; i < flags['NUM_WORKERS']; i++) {
                 if (!workers[i])
@@ -523,7 +524,7 @@ function drawImage(data) {
 
                 workerOutstandingMessages[i] = 0;
                 // Send message to worker telling them the scene, textures, other parameters
-                workers[i].postMessage({action: "setD", d: JSON.stringify(d), max_x: max_x, max_y : max_y, width: width, height: height, textureData: textureData, normalMapData: normalMapData});
+                workers[i].postMessage(message);
                 workers[i].onmessage = workerMessageHandler(i);
             }
 
@@ -532,7 +533,6 @@ function drawImage(data) {
                 var rays = [];
                 var workerNum = (y / lineSkip) % flags['NUM_WORKERS']
 
-                postMessageCalls++;
                 workers[workerNum].postMessage({y1: y, y2: y + lineSkip, action: "getPixels"});
                 workerOutstandingMessages[workerNum]++;
             }
@@ -760,7 +760,7 @@ function drawImage(data) {
 }
 
 $(document).ready(function() {
-    $.getJSON("scenes/simple_soft_shadow.json", function(d) {
+    $.getJSON("scenes/chessboard.json", function(d) {
         window.d = drawImage(d);
     });
 });

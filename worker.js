@@ -35,6 +35,18 @@ var getPerlin = function(mappingPoint, primitive, mode) {
 
         return [sum, sum, sum];
     }
+    else if (mode === "wood") {
+        var sum = 0;
+        for (var x = 0; x < 2; x++) {
+            for (var y = 0; y < 2; y++) {
+                for (var z = 0; z < 2; z++) {
+                    sum += d.perlin[coords[x][0]][coords[y][1]][coords[z][2]][0] * (x === 1 ? diff[0] : 1 - diff[0]) * (y === 1 ? diff[1] : 1 - diff[1]) * (z === 1 ? diff[2] : 1 - diff[2]);
+                }
+            }
+        }
+        var v = (sum * 20 - (sum * 20 | 0)) / 2 + 0.5;
+        return [v, v, v];
+    }
     else {
         var sum = [0, 0, 0];
         for (var i = 0; i < 3; i++) {
@@ -134,7 +146,7 @@ function getColorForRay(cameraPosition, rayN, reflections, shadowSamples) {
             }
 
             // Account for refraction
-            if (primitive.refraction && !vEq(primitive.refraction, [0, 0, 0]) && reflections <= maxReflections && ENABLE_REFRACTION) {
+            if (primitive.refraction && !vEq(primitive.refraction, [0, 0, 0]) && reflections <= flags["MAX_REFLECTIONS"] && flags["REFRACTION"]) {
                 hasRefraction = true;
                 hasReflection = false;
 
@@ -159,24 +171,24 @@ function getColorForRay(cameraPosition, rayN, reflections, shadowSamples) {
                     var refractDirection = vAdd(vMult(cameraToHitPointN, eta), vMult(result.normal, eta * c1 - Math.sqrt(cs2)));
 
                     var refractColor = getColorForRay(result.hitPoint, refractDirection, reflections + 1);
-                    color = refractColor;
-                    continue;
+                    color = vAdd(vCompMultv(ambientColor, primitive.refractionInv), vCompMultv(refractColor, primitive.refraction));
                 }
-                else {
+                else {  // Total internal reflection.
                     hasReflection = true;
                     primitive.reflection = primitive.refraction;
+                    primitive.reflectionInv = primitive.refractionInv;
                 }
             }
 
             // Reflection
-            if (primitive.reflection && !vEq(primitive.reflection, [0, 0, 0]) && reflections <= maxReflections && ENABLE_REFLECTION) {
+            if (primitive.reflection && !vEq(primitive.reflection, [0, 0, 0]) && reflections <= flags["MAX_REFLECTIONS"] && flags["REFLECTION"]) {
                 // Compute a new ray that starts at the hit point and goes in the direction of the original ray, reflected about the normal
                 var hitPointToCameraR = vNeg(v3Sub(hitPointToCameraN, vMult(result.normal, 2 * (vDot(hitPointToCameraN, result.normal)))));
                 var reflectColor = vCompMultv(getColorForRay(result.hitPoint, hitPointToCameraR, reflections + 1), primitive.reflection);
                 var hasReflection = true;
                 color = vAdd(vCompMultv(ambientColor, primitive.reflectionInv), vCompMultv(reflectColor, primitive.reflection));
             }
-            else {
+            else if (!hasRefraction) {
                 color = ambientColor;
             }
 
@@ -191,13 +203,15 @@ function getColorForRay(cameraPosition, rayN, reflections, shadowSamples) {
                     var hitPointToLightN = vNormalize(hitPointToLight);
                     var hitPointToLightDist = vLen(hitPointToLight);
 
+
+                    // Check for soft shadows
                     if (light.radius === 0 || !flags["SOFT_SHADOWS"]) {
                         if (checkLightRayForShadow(result, light, hitPointToLightN, hitPointToLightDist)) {
                             continue;
                         }
                     }
-                    else {  // soft shadows. perturb the light source.
-                        shadowSamples = shadowSamples || 32;
+                    else {  // Soft shadows enabled. Perturb the light source across many samples.
+                        shadowSamples = shadowSamples || flags["SOFT_SHADOWS_COUNT"];
 
                         var shadowFactor = 0;
 
@@ -254,16 +268,23 @@ function getColorForRay(cameraPosition, rayN, reflections, shadowSamples) {
                     var surfaceColor = vAdd(diffuseColor, specularColor);
 
                     if (hasTexture) {
-                        surfaceColor = vCompMultv(surfaceColor, textureColor);
+                        if (primitive.perlinTexture) {
+                            surfaceColor = vCompMultv(surfaceColor, vAdd(vSub([1, 1, 1], primitive.perlinTexture), vCompMultv(textureColor, primitive.perlinTexture)));
+                        }
+                        else {
+                            surfaceColor = vCompMultv(surfaceColor, textureColor);
+                        }
                     }
                     if (light.radius !== 0 && flags["SOFT_SHADOWS"]) {
                         surfaceColor = vMult(surfaceColor, shadowFactor / shadowSamples);
                     }
 
-                    if (!hasReflection)
-                        color = vAdd(color, surfaceColor);
-                    else {
+                    if (hasReflection)
                         color = vAdd(color, vCompMultv(surfaceColor, primitive.reflectionInv));
+                    else if (hasRefraction)
+                        color = vAdd(color, vCompMultv(surfaceColor, primitive.refractionInv));
+                    else {
+                        color = vAdd(color, surfaceColor);
                     }
                     //color = [(result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128, (result.normal[2] + 1) * 128];
                     //if (primitive.id == "box3") {
@@ -303,7 +324,11 @@ onmessage = function(e) {
 
         for (var i in rays) {
             var rayData = rays[i];
-            var ray = vNormalize(vAdd(d.camera.direction, [rayData.x / width * max_x - (max_x/2), -(rayData.y / height * max_y) + (max_y/2), 0]));
+            var newDir = vAdd(
+                vMult(d.camera.up, -(rayData.y / height * max_y) + (max_y/2)), 
+                vMult(d.camera.right, rayData.x / width * max_x - (max_x/2)));
+
+            var ray = vNormalize(vAdd(d.camera.direction, newDir));
             data.push({
                 color: getColorForRay(d.camera.position, ray, 0),
                 x: rayData.x,

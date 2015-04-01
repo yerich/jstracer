@@ -6,7 +6,7 @@
             "diffuseColor": [255, 233, 211],
             "specularColor": [255, 255, 255],
             "ambientColor": [255, 255, 255],
-            "refraction": [0.5, 0.5, 0.5],
+            "refraction": [1, 1, 1],
             "refractionIndex": 1.33
         }, {
             "type": "sphere",

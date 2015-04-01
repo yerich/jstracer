@@ -120,7 +120,6 @@ function intersectTriangle(primitive, cameraStart, cameraDir, cameraRayRatio, re
 
         // Project 3D coordinates onto plane
         if (primitive.requiresMapping) {
-            if (Math.random() < 0.01) console.log("test");
             return {
                 t: result / cameraRayRatio,
                 normal: primitive.normal,
@@ -323,7 +322,7 @@ function intersect(primitive, position, ray, resultOnly) {
 
         var bestResult = false;
 
-        if (primitive.hasPartitions && usePartitions) {
+        if (primitive.hasPartitions && flags['OCTREES']) {
             for (var i = 0; i < primitive.partitions.length; i++) {
                 if (primitive.partitions[i] === false) continue;
                 var partitionResult = intersect(primitive.partitions[i], position, ray, resultOnly);

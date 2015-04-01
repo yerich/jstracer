@@ -7,13 +7,12 @@
         {
             "type": "sphere",
             "id": "sphere1",
-            "diffuseColor": [255, 233, 211],
+            "diffuseColor": [218, 160, 96],
             "specularColor": [255, 255, 255],
             "ambientColor": [255, 255, 255],
-            "reflection": [0.5, 0.5, 0.5],
             "perlinTexture": [1.0, 1.0, 1.0],
-            "perlinTextureDimensions": [100, 100, 100],
-            "perlinTextureMode": "blackAndWhite"
+            "perlinTextureDimensions": [2, 2, 2],
+            "perlinTextureMode": "wood"
         }, {
             "type": "sphere",
             "id": "origin",
@@ -23,11 +22,11 @@
         }, {
             "type": "plane",
             "id": "plane1",
-            "diffuseColor": [255, 255, 255],
+            "diffuseColor": [218, 160, 96],
             "specularColor": [255, 255, 255],
-            "ambientColor": [255, 255, 255],
+            "ambientColor": [218, 160, 96],
             "perlinTexture": [1.0, 1.0, 1.0],
-            "perlinTextureDimensions": [2, 2, 2],
+            "perlinTextureDimensions": [0.5, 0.5, 0.5],
             "perlinTextureMode": "color"
         }, {
             "type": "plane",

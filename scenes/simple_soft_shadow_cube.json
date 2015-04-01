@@ -1,0 +1,47 @@
+{
+    "primitives": [
+        {
+            "type": "plane",
+            "id": "plane1",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [255, 255, 255]
+        }, {
+            "type": "box",
+            "id": "box1",
+            "diffuseColor": [0, 255, 0],
+            "specularColor": [0, 255, 0],
+            "ambientColor": [0, 255, 0]
+        }
+    ],
+    "lights": [
+        {
+            "center": [2.5, 2.5, -2.5],
+            "diffuseIntensity": [0.5, 0.5, 0.5],
+            "specularIntensity": [0.5, 0.5, 0.5],
+            "falloff": [1, 0, 0],
+            "radius": 0.75
+        }
+    ],
+    "transformations": [
+        {
+            "target": "plane1",
+            "type": "translate",
+            "amount": [0, -2, 0]
+        }, {
+            "target": "box1",
+            "type": "scale",
+            "amount": [2, 2, 2]
+        }, {
+            "target": "box1",
+            "type": "translate",
+            "amount": [-0.2, -1.5, 0]
+        }
+    ],
+    "camera": {
+        "position": [0, 2, 10],
+        "direction": [0, -0.4, -1],
+        "up": [0, 1, 0]
+    },
+    "ambientIntensity": [0.1, 0.1, 0.1]
+}
