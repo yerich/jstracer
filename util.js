@@ -3,25 +3,26 @@ e = 0.00000000001;
 flags = {};
 
 flags['OCTREES'] = true;
+flags['UNIFORM_GRID_PARTITIONING'] = false;
 flags['USE_WORKERS'] = true;
 flags['WORKER_CHUNK_PIXELS'] = 512;
 flags['WORKER_AA_CHUNK_PIXELS'] = 22;
 flags['NUM_WORKERS'] = 4;
 
-flags["BUMP_MAPPING"] = true;
+flags["BUMP_MAPPING"] = false;
 flags['PERLIN_SIZE'] = 70;
 
-flags["MULTISAMPLING"] = true;
+flags["MULTISAMPLING"] = false;
 flags["MULTISAMPLING_THRESHOLD"] = 100;
 flags["MULTISAMPLING_AMOUNT"] = 16;
-flags["MULTISAMPLING_ADAPTIVE_HIGHLIGHT"] = false;
+flags["MULTISAMPLING_ADAPTIVE_HIGHLIGHT"] = true;
 flags["SOFT_SHADOWS"] = true;
 flags["SOFT_SHADOWS_COUNT"] = 16;
 flags["SOFT_SHADOWS_ALIASED_COUNT"] = 8;
 
 flags["REFLECTION"] = true;
 flags["REFRACTION"] = true;
-flags["MAX_REFLECTIONS"] = 10;
+flags["MAX_REFLECTIONS"] = 20;
 flags["DITHERING"] = true;
 
 log = function(m, r, reset) {

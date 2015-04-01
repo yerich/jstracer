@@ -677,7 +677,7 @@
         {
             "target": "rook_b_2",
             "type": "translate",
-            "amount": [7.02, 0, -6.04]
+            "amount": [7.02, 0, -7.04]
         },
         {
             "target": "queen_b",

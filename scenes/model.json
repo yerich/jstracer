@@ -7,27 +7,27 @@
         {
             "type": "plane",
             "id": "plane1",
-            "diffuseColor": [255, 255, 255],
+            "diffuseColor": [128, 128, 128],
             "specularColor": [0, 0, 0],
-            "ambientColor": [255, 255, 255]
+            "ambientColor": [128, 128, 128]
         }, {
             "type": "plane",
             "id": "planeback",
-            "diffuseColor": [0, 0, 255],
-            "specularColor": [0, 0, 0],
-            "ambientColor": [0, 0, 0]
+            "diffuseColor": [128, 0, 14],
+            "specularColor": [128, 0, 14],
+            "ambientColor": [128, 0, 14]
         }, {
             "type": "model",
             "id": "model1",
             "modelFile": "teapot.raw",
-            "diffuseColor": [0, 255, 0],
-            "specularColor": [0, 255, 0],
-            "ambientColor": [0, 255, 0]
+            "diffuseColor": [255, 239, 193],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 239, 193]
         }
     ],
     "lights": [
         {
-            "center": [0, 0, 10],
+            "center": [-4, 4, 10],
             "diffuseIntensity": [0.5, 0.5, 0.5],
             "specularIntensity": [0.5, 0.5, 0.5],
             "falloff": [1, 0, 0]
@@ -51,16 +51,11 @@
             "target": "model1",
             "type": "scale",
             "amount": [2, 2, 2]
-        }, {
-            "target": "model1",
-            "type": "rotate",
-            "axis": "x",
-            "amount": -90
         }
     ],
     "camera": {
-        "position": [0, 0, 10],
-        "direction": [0, 0, -1],
+        "position": [0, 1.3, 10],
+        "direction": [0, -0.1, -1],
         "up": [0, 1, 0]
     },
     "ambientIntensity": [0.1, 0.1, 0.1]

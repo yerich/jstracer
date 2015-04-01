@@ -322,7 +322,7 @@ function intersect(primitive, position, ray, resultOnly) {
 
         var bestResult = false;
 
-        if (primitive.hasPartitions && flags['OCTREES']) {
+        if (primitive.hasPartitions && (flags['OCTREES'] || flags['UNIFORM_GRID_PARTITIONING'])) {
             for (var i = 0; i < primitive.partitions.length; i++) {
                 if (primitive.partitions[i] === false) continue;
                 var partitionResult = intersect(primitive.partitions[i], position, ray, resultOnly);

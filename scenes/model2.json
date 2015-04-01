@@ -1,0 +1,61 @@
+{
+    "models": [
+        "king_detailed.raw"
+    ],
+    "primitives": [
+        {
+            "type": "plane",
+            "id": "plane1",
+            "diffuseColor": [128, 128, 128],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [128, 128, 128]
+        }, {
+            "type": "plane",
+            "id": "planeback",
+            "diffuseColor": [128, 0, 14],
+            "specularColor": [128, 0, 14],
+            "ambientColor": [128, 0, 14]
+        }, {
+            "type": "model",
+            "id": "model1",
+            "modelFile": "king_detailed.raw",
+            "diffuseColor": [255, 239, 193],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 239, 193]
+        }
+    ],
+    "lights": [
+        {
+            "center": [-4, 4, 10],
+            "diffuseIntensity": [0.5, 0.5, 0.5],
+            "specularIntensity": [0.5, 0.5, 0.5],
+            "falloff": [1, 0, 0]
+        }
+    ],
+    "transformations": [
+        {
+            "target": "plane1",
+            "type": "translate",
+            "amount": [0, -2, 0]
+        }, {
+            "target": "planeback",
+            "type": "rotate",
+            "amount": 90,
+            "axis": "x"
+        }, {
+            "target": "planeback",
+            "type": "translate",
+            "amount": [0, 0, -3]
+        }, {
+            "target": "model1",
+            "type": "scale",
+            "amount": [2, 2, 2]
+        }
+    ],
+    "camera": {
+        "position": [0, 1.3, 10],
+        "direction": [0, -0.1, -1],
+        "up": [0, 1, 0]
+    },
+    "ambientIntensity": [0.1, 0.1, 0.1]
+}

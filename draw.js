@@ -92,7 +92,7 @@ function drawImage(data) {
 
                     if (partition.triangles.length > 0) {
                         model.partitions.push(partition);
-                        if (partition.triangles.length < model.triangles.length - 5)
+                        if (partition.triangles.length < model.triangles.length - 5 && flags['OCTREES'])
                             makeUniformModelGrid(partition);
                     }
                     else 
@@ -526,6 +526,7 @@ function drawImage(data) {
                 // Send message to worker telling them the scene, textures, other parameters
                 workers[i].postMessage(message);
                 workers[i].onmessage = workerMessageHandler(i);
+                workers[i].postMessage({action: "setFlags", flags: flags});
             }
 
             // Allocate lines for each worker to render
@@ -758,9 +759,3 @@ function drawImage(data) {
 
     return d;
 }
-
-$(document).ready(function() {
-    $.getJSON("scenes/chessboard.json", function(d) {
-        window.d = drawImage(d);
-    });
-});

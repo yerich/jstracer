@@ -1,0 +1,70 @@
+{
+    "models": [
+        "cube.raw",
+        "teapot.raw"
+    ],
+    "textures": [
+        {"url": "planks.jpg"}
+    ],
+    "primitives": [
+        {
+            "type": "plane",
+            "id": "plane1",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [255, 255, 255],
+            "texture": "planks.jpg",
+            "textureMappedWidth": 5, 
+            "textureMappedHeight": 5
+        }, {
+            "type": "plane",
+            "id": "planeback",
+            "diffuseColor": [128, 128, 128],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [128, 128, 128]
+        }, {
+            "type": "model",
+            "id": "model1",
+            "modelFile": "teapot.raw",
+            "diffuseColor": [0, 255, 0],
+            "specularColor": [0, 255, 0],
+            "ambientColor": [0, 255, 0],
+            "refraction": [1, 1, 1],
+            "refractionIndex": 1.2
+        }
+    ],
+    "lights": [
+        {
+            "center": [0, 10, 10],
+            "diffuseIntensity": [0.7, 0.7, 0.7],
+            "specularIntensity": [0.7, 0.7, 0.7],
+            "falloff": [1, 0, 0]
+        }
+    ],
+    "transformations": [
+        {
+            "target": "plane1",
+            "type": "translate",
+            "amount": [0, 0, 0]
+        }, {
+            "target": "planeback",
+            "type": "rotate",
+            "amount": 90,
+            "axis": "x"
+        }, {
+            "target": "planeback",
+            "type": "translate",
+            "amount": [0, 0, -8]
+        }, {
+            "target": "model1",
+            "type": "scale",
+            "amount": [2, 2, 2]
+        }
+    ],
+    "camera": {
+        "position": [3, 0.5, 10],
+        "direction": [-0.3, 0, -1],
+        "up": [0, 1, 0]
+    },
+    "ambientIntensity": [0.1, 0.1, 0.1]
+}

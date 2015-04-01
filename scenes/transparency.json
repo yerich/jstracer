@@ -1,0 +1,144 @@
+{
+    "primitives": [
+       {
+            "type": "sphere",
+            "id": "sphere1",
+            "diffuseColor": [255, 233, 211],
+            "specularColor": [255, 255, 255],
+            "ambientColor": [255, 255, 255]
+        }, {
+            "type": "plane",
+            "id": "plane1",
+            "diffuseColor": [128, 128, 128],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [128, 128, 128]
+        }, {
+            "type": "plane",
+            "id": "planeback",
+            "diffuseColor": [255, 255, 255],
+            "specularColor": [0, 0, 0],
+            "ambientColor": [0, 0, 0],
+            "reflection": [0.5, 0.5, 0.5]
+        }, {
+            "type": "box",
+            "id": "box1",
+            "diffuseColor": [0, 167, 0],
+            "specularColor": [0, 167, 0],
+            "ambientColor": [0, 167, 0],
+            "refraction": [0.8, 0.8, 0.8],
+            "refractionIndex": 1
+        }, {
+            "type": "box",
+            "id": "box2",
+            "diffuseColor": [0, 167, 0],
+            "specularColor": [0, 167, 0],
+            "ambientColor": [0, 167, 0],
+            "refraction": [0.8, 0.8, 0.8],
+            "refractionIndex": 1
+        }, {
+            "type": "box",
+            "id": "box3",
+            "diffuseColor": [0, 167, 0],
+            "specularColor": [0, 167, 0],
+            "ambientColor": [0, 167, 0],
+            "refraction": [0.8, 0.8, 0.8],
+            "refractionIndex": 1
+        }, {
+            "type": "box",
+            "id": "box4",
+            "diffuseColor": [0, 167, 0],
+            "specularColor": [0, 167, 0],
+            "ambientColor": [0, 167, 0],
+            "refraction": [0.8, 0.8, 0.8],
+            "refractionIndex": 1
+        }, {
+            "type": "box",
+            "id": "box5",
+            "diffuseColor": [0, 167, 0],
+            "specularColor": [0, 167, 0],
+            "ambientColor": [0, 167, 0],
+            "refraction": [0.8, 0.8, 0.8],
+            "refractionIndex": 1
+        }
+    ],
+    "lights": [
+        {
+            "center": [0, 2.5, 0],
+            "diffuseIntensity": [0.5, 0.5, 0.5],
+            "specularIntensity": [0.5, 0.5, 0.5],
+            "falloff": [1, 0, 0]
+        },
+        {
+            "center": [4, 4, 5],
+            "diffuseIntensity": [0.5, 0.5, 0.5],
+            "specularIntensity": [0.5, 0.5, 0.5],
+            "falloff": [1, 0, 0]
+        }
+    ],
+    "transformations": [
+        {
+            "target": "plane1",
+            "type": "translate",
+            "amount": [0, -1, 0]
+        }, {
+            "target": "planeback",
+            "type": "rotate",
+            "amount": 90,
+            "axis": "x"
+        }, {
+            "target": "planeback",
+            "type": "translate",
+            "amount": [0, 0, -6]
+        }, {
+            "target": "sphere1",
+            "type": "translate",
+            "amount": [0, 0, -3]
+        }, {
+            "target": "box1",
+            "type": "scale",
+            "amount": [2, 2, 0.2]
+        }, {
+            "target": "box1",
+            "type": "translate",
+            "amount": [0, 0, 2]
+        }, {
+            "target": "box2",
+            "type": "scale",
+            "amount": [2, 2, 0.2]
+        }, {
+            "target": "box2",
+            "type": "translate",
+            "amount": [0, 0, 4]
+        }, {
+            "target": "box3",
+            "type": "scale",
+            "amount": [2, 2, 0.2]
+        }, {
+            "target": "box3",
+            "type": "translate",
+            "amount": [0, 0, 6]
+        }, {
+            "target": "box4",
+            "type": "scale",
+            "amount": [2, 2, 0.2]
+        }, {
+            "target": "box4",
+            "type": "translate",
+            "amount": [0, 0, 8]
+        }, {
+            "target": "box5",
+            "type": "scale",
+            "amount": [2, 2, 0.2]
+        }, {
+            "target": "box5",
+            "type": "translate",
+            "amount": [0, 0, 10]
+        }
+    ],
+    "camera": {
+        "position": [-4, 4, 20],
+        "direction": [0.4, -0.4, -1],
+        "up": [0, 1, 0]
+    },
+    "ambientIntensity": [0.1, 0.1, 0.1]
+}

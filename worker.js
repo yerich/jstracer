@@ -373,4 +373,7 @@ onmessage = function(e) {
         textureData = e.data.textureData;
         normalMapData = e.data.normalMapData;
     }
+    else if (e.data.action === "setFlags") {
+        flags = e.data.flags
+    }
 }

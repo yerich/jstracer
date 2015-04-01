@@ -6,13 +6,19 @@
             "diffuseColor": [255, 233, 211],
             "specularColor": [255, 255, 255],
             "ambientColor": [255, 255, 255],
-            "reflection": [0.5, 0.5, 0.5]
+            "reflection": [0.8, 0.8, 0.8]
         }, {
             "type": "sphere",
             "id": "origin",
             "diffuseColor": [255, 0, 0],
             "specularColor": [255, 0, 0],
             "ambientColor": [255, 0, 0]
+        }, {
+            "type": "sphere",
+            "id": "origin2",
+            "diffuseColor": [255, 255, 0],
+            "specularColor": [255, 255, 0],
+            "ambientColor": [255, 255, 0]
         }, {
             "type": "plane",
             "id": "plane1",
@@ -26,7 +32,7 @@
             "diffuseColor": [255, 255, 255],
             "specularColor": [0, 0, 0],
             "ambientColor": [0, 0, 0],
-            "reflection": [0.5, 0.5, 0.5]
+            "reflection": [0.8, 0.8, 0.8]
         }, {
             "type": "box",
             "id": "box1",
@@ -44,6 +50,12 @@
     "lights": [
         {
             "center": [0, 2.5, 0],
+            "diffuseIntensity": [0.5, 0.5, 0.5],
+            "specularIntensity": [0.5, 0.5, 0.5],
+            "falloff": [1, 0, 0]
+        },
+        {
+            "center": [2, 2.5, 8],
             "diffuseIntensity": [0.5, 0.5, 0.5],
             "specularIntensity": [0.5, 0.5, 0.5],
             "falloff": [1, 0, 0]
@@ -78,9 +90,17 @@
             "amount": [0.4, 0.4, 0.4]
         }, {
             "target": "origin",
+            "type": "translate",
+            "amount": [1.4, 0.4, 0.4]
+        }, {
+            "target": "origin",
             "type": "rotate",
             "axis": "x",
             "amount": 60
+        }, {
+            "target": "origin2",
+            "type": "translate",
+            "amount": [-1, 2, 8]
         }, {
             "target": "box1",
             "type": "scale",
@@ -115,7 +135,7 @@
         }
     ],
     "camera": {
-        "position": [0, 0, 10],
+        "position": [-0.7, 0, 10],
         "direction": [0, 0, -1],
         "up": [0, 1, 0]
     },
